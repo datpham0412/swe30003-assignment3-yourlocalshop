@@ -1,15 +1,19 @@
 using Assignment_3_SWE30003.Data;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 
 namespace Assignment_3_SWE30003.Models
 {
     public class Product
     {
+        [Key]
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public string Category { get; set; } = string.Empty;
         public decimal Price { get; set; }
         public bool IsInCatalogue { get; set; } = false; 
+        public Inventory? Inventory { get; set; }
+
         public string AddToDatabase(AppDbContext context)
         {
             if (string.IsNullOrWhiteSpace(Name))

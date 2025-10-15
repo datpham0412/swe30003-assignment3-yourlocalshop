@@ -146,7 +146,7 @@ export default function AdminDashboard() {
 
     try {
       const response = await fetch(
-        `http://localhost:5074/api/Product/add?email=${encodeURIComponent(email!)}&password=${encodeURIComponent(password!)}&name=${encodeURIComponent(addProductData.name)}&price=${encodeURIComponent(addProductData.price)}&category=${encodeURIComponent(addProductData.category)}}`,
+        `http://localhost:5074/api/Product/add?email=${encodeURIComponent(email!)}&password=${encodeURIComponent(password!)}&name=${encodeURIComponent(addProductData.name)}&price=${encodeURIComponent(addProductData.price)}&category=${encodeURIComponent(addProductData.category)}`,
         { method: "POST" },
       )
 

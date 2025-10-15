@@ -1,11 +1,15 @@
 using Assignment_3_SWE30003.Data;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 
 namespace Assignment_3_SWE30003.Models
 {
     public class Inventory
     {
+        [Key]
         public int Id { get; set; }
+        [ForeignKey(nameof(Product))] 
         public int ProductId { get; set; }
         public int Quantity { get; set; }
 

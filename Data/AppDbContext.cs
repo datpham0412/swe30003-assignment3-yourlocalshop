@@ -14,11 +14,11 @@ namespace Assignment_3_SWE30003.Data
             base.OnModelCreating(modelBuilder);
             modelBuilder.Entity<Product>()
                 .Property(p => p.IsInCatalogue)
-                .HasDefaultValue(false); 
+                .HasDefaultValue(false);
             modelBuilder.Entity<Inventory>()
-                .HasOne<Product>()
-                .WithMany()
-                .HasForeignKey(i => i.ProductId)
+                .HasOne(i => i.Product)        
+                .WithOne(p => p.Inventory)    
+                .HasForeignKey<Inventory>(i => i.ProductId)
                 .OnDelete(DeleteBehavior.Cascade);
         }
     }
