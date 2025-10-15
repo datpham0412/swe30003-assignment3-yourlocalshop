@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -18,22 +17,28 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { LogOut, Package, Pencil, Trash2, Plus, Warehouse } from "lucide-react"
+import { LogOut, Pencil, Trash2, Plus } from "lucide-react"
 
 interface Product {
   id: number
   name: string
   price: number
   category: string
-  stock: number
 }
 
 interface Inventory {
   id: number
   productId: number
-  productName?: string
   quantity: number
+}
+
+interface UnifiedProduct {
+  id: number
+  name: string
+  price: number
+  category: string
+  quantity: number | null // null if no inventory exists
+  inventoryId: number | null // null if no inventory exists
 }
 
 export default function AdminDashboard() {
@@ -42,51 +47,30 @@ export default function AdminDashboard() {
   const [password, setPassword] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
-  // Product list state
-  const [products, setProducts] = useState<Product[]>([])
-  const [productsLoading, setProductsLoading] = useState(false)
+  const [unifiedProducts, setUnifiedProducts] = useState<UnifiedProduct[]>([])
+  const [dataLoading, setDataLoading] = useState(false)
 
   // Add product state
   const [addProductData, setAddProductData] = useState({
     name: "",
     price: "",
     category: "",
-    stock: "",
   })
   const [addProductLoading, setAddProductLoading] = useState(false)
 
-  // Edit product state
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+  const [editingProduct, setEditingProduct] = useState<UnifiedProduct | null>(null)
   const [editProductData, setEditProductData] = useState({
     name: "",
     price: "",
-    stock: "",
+    category: "",
+    quantity: "",
   })
   const [editProductLoading, setEditProductLoading] = useState(false)
 
-  // Delete product state
+  // Delete state
   const [deletingProductId, setDeletingProductId] = useState<number | null>(null)
-
-  // Inventory list state
-  const [inventories, setInventories] = useState<Inventory[]>([])
-  const [inventoriesLoading, setInventoriesLoading] = useState(false)
-
-  // Add inventory state
-  const [addInventoryData, setAddInventoryData] = useState({
-    productId: "",
-    quantity: "",
-  })
-  const [addInventoryLoading, setAddInventoryLoading] = useState(false)
-
-  // Edit inventory state
-  const [editingInventory, setEditingInventory] = useState<Inventory | null>(null)
-  const [editInventoryData, setEditInventoryData] = useState({
-    quantity: "",
-  })
-  const [editInventoryLoading, setEditInventoryLoading] = useState(false)
-
-  // Delete inventory state
-  const [deletingInventoryId, setDeletingInventoryId] = useState<number | null>(null)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [productToDelete, setProductToDelete] = useState<UnifiedProduct | null>(null)
 
   // Toast message state
   const [toast, setToast] = useState<{ type: "success" | "error"; text: string } | null>(null)
@@ -111,9 +95,7 @@ export default function AdminDashboard() {
     setPassword(storedPassword)
     setLoading(false)
 
-    // Fetch products and inventories on mount
-    fetchProducts()
-    fetchInventories()
+    fetchUnifiedData()
   }, [router])
 
   const showToast = (type: "success" | "error", text: string) => {
@@ -121,42 +103,42 @@ export default function AdminDashboard() {
     setTimeout(() => setToast(null), 4000)
   }
 
-  const fetchProducts = async () => {
-    setProductsLoading(true)
+  const fetchUnifiedData = async () => {
+    setDataLoading(true)
     try {
-      const response = await fetch("http://localhost:5074/api/Product/list")
-      if (response.ok) {
-        const data = await response.json()
-        setProducts(data)
-      } else {
-        showToast("error", "Failed to load products.")
-      }
-    } catch (error) {
-      showToast("error", "Network error. Please check your connection.")
-    } finally {
-      setProductsLoading(false)
-    }
-  }
+      // Fetch both products and inventories in parallel
+      const [productsResponse, inventoriesResponse] = await Promise.all([
+        fetch("http://localhost:5074/api/Product/list"),
+        fetch("http://localhost:5074/api/Inventory/list"),
+      ])
 
-  const fetchInventories = async () => {
-    setInventoriesLoading(true)
-    try {
-      const response = await fetch("http://localhost:5074/api/Inventory/list")
-      if (response.ok) {
-        const data = await response.json()
-        // Map product names to inventory records
-        const inventoriesWithNames = data.map((inv: Inventory) => {
-          const product = products.find((p) => p.id === inv.productId)
-          return { ...inv, productName: product?.name || "Unknown Product" }
-        })
-        setInventories(inventoriesWithNames)
-      } else {
-        showToast("error", "Failed to load inventories.")
+      if (!productsResponse.ok) {
+        showToast("error", "Failed to load products.")
+        setDataLoading(false)
+        return
       }
+
+      const products: Product[] = await productsResponse.json()
+      const inventories: Inventory[] = inventoriesResponse.ok ? await inventoriesResponse.json() : []
+
+      // Merge products with their inventory data
+      const unified: UnifiedProduct[] = products.map((product) => {
+        const inventory = inventories.find((inv) => inv.productId === product.id)
+        return {
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          category: product.category,
+          quantity: inventory ? inventory.quantity : null,
+          inventoryId: inventory ? inventory.id : null,
+        }
+      })
+
+      setUnifiedProducts(unified)
     } catch (error) {
       showToast("error", "Network error. Please check your connection.")
     } finally {
-      setInventoriesLoading(false)
+      setDataLoading(false)
     }
   }
 
@@ -166,14 +148,14 @@ export default function AdminDashboard() {
 
     try {
       const response = await fetch(
-        `http://localhost:5074/api/Product/add?email=${encodeURIComponent(email!)}&password=${encodeURIComponent(password!)}&name=${encodeURIComponent(addProductData.name)}&price=${encodeURIComponent(addProductData.price)}&category=${encodeURIComponent(addProductData.category)}&stock=${encodeURIComponent(addProductData.stock)}`,
+        `http://localhost:5074/api/Product/add?email=${encodeURIComponent(email!)}&password=${encodeURIComponent(password!)}&name=${encodeURIComponent(addProductData.name)}&price=${encodeURIComponent(addProductData.price)}&category=${encodeURIComponent(addProductData.category)}}`,
         { method: "POST" },
       )
 
       if (response.ok) {
         showToast("success", "Product added successfully!")
-        setAddProductData({ name: "", price: "", category: "", stock: "" })
-        fetchProducts() // Refresh the list
+        setAddProductData({ name: "", price: "", category: ""})
+        fetchUnifiedData() // Refresh the list
       } else {
         const errorText = await response.text()
         showToast("error", errorText || "Failed to add product.")
@@ -192,18 +174,64 @@ export default function AdminDashboard() {
     setEditProductLoading(true)
 
     try {
-      const response = await fetch(
-        `http://localhost:5074/api/Product/update?email=${encodeURIComponent(email!)}&password=${encodeURIComponent(password!)}&id=${editingProduct.id}&name=${encodeURIComponent(editProductData.name)}&price=${encodeURIComponent(editProductData.price)}&stock=${encodeURIComponent(editProductData.stock)}`,
-        { method: "PUT" },
-      )
+      let productUpdateSuccess = true
+      let inventoryUpdateSuccess = true
 
-      if (response.ok) {
+      // Check if product fields changed
+      const productChanged =
+        editProductData.name !== editingProduct.name ||
+        Number.parseFloat(editProductData.price) !== editingProduct.price ||
+        editProductData.category !== editingProduct.category
+
+      // Check if quantity changed
+      const quantityChanged =
+        editProductData.quantity !== "" &&
+        (editingProduct.quantity === null || Number.parseInt(editProductData.quantity) !== editingProduct.quantity)
+
+      // Update product if needed
+      if (productChanged) {
+        const response = await fetch(
+          `http://localhost:5074/api/Product/update?email=${encodeURIComponent(email!)}&password=${encodeURIComponent(password!)}&id=${editingProduct.id}&name=${encodeURIComponent(editProductData.name)}&price=${encodeURIComponent(editProductData.price)}`,
+          { method: "PUT" },
+        )
+        productUpdateSuccess = response.ok
+        if (!response.ok) {
+          const errorText = await response.text()
+          showToast("error", errorText || "Failed to update product.")
+        }
+      }
+
+      // Update or add inventory if quantity changed
+      if (quantityChanged && editProductData.quantity !== "") {
+        if (editingProduct.inventoryId !== null) {
+          // Update existing inventory
+          const response = await fetch(
+            `http://localhost:5074/api/Inventory/update?email=${encodeURIComponent(email!)}&password=${encodeURIComponent(password!)}&id=${editingProduct.inventoryId}&quantity=${encodeURIComponent(editProductData.quantity)}`,
+            { method: "PUT" },
+          )
+          inventoryUpdateSuccess = response.ok
+          if (!response.ok) {
+            const errorText = await response.text()
+            showToast("error", errorText || "Failed to update inventory.")
+          }
+        } else {
+          // Add new inventory
+          const response = await fetch(
+            `http://localhost:5074/api/Inventory/add?email=${encodeURIComponent(email!)}&password=${encodeURIComponent(password!)}&productId=${editingProduct.id}&quantity=${encodeURIComponent(editProductData.quantity)}`,
+            { method: "POST" },
+          )
+          inventoryUpdateSuccess = response.ok
+          if (!response.ok) {
+            const errorText = await response.text()
+            showToast("error", errorText || "Failed to add inventory.")
+          }
+        }
+      }
+
+      if (productUpdateSuccess && inventoryUpdateSuccess) {
         showToast("success", "Product updated successfully!")
         setEditingProduct(null)
-        fetchProducts() // Refresh the list
-      } else {
-        const errorText = await response.text()
-        showToast("error", errorText || "Failed to update product.")
+        fetchUnifiedData() // Refresh the list
       }
     } catch (error) {
       showToast("error", "Network error. Please check your connection.")
@@ -212,118 +240,57 @@ export default function AdminDashboard() {
     }
   }
 
-  const handleDeleteProduct = async (productId: number) => {
-    setDeletingProductId(productId)
+  const handleDeleteProduct = async () => {
+    if (!productToDelete) return
+
+    setDeletingProductId(productToDelete.id)
 
     try {
-      const response = await fetch(
-        `http://localhost:5074/api/Product/delete?email=${encodeURIComponent(email!)}&password=${encodeURIComponent(password!)}&id=${productId}`,
+      // Delete product
+      const productResponse = await fetch(
+        `http://localhost:5074/api/Product/delete?email=${encodeURIComponent(email!)}&password=${encodeURIComponent(password!)}&id=${productToDelete.id}`,
         { method: "DELETE" },
       )
 
-      if (response.ok) {
-        showToast("success", "Product deleted successfully!")
-        setProducts(products.filter((p) => p.id !== productId))
+      // Delete inventory if exists
+      let inventoryDeleted = true
+      if (productToDelete.inventoryId !== null) {
+        const inventoryResponse = await fetch(
+          `http://localhost:5074/api/Inventory/delete?email=${encodeURIComponent(email!)}&password=${encodeURIComponent(password!)}&id=${productToDelete.inventoryId}`,
+          { method: "DELETE" },
+        )
+        inventoryDeleted = inventoryResponse.ok
+      }
+
+      if (productResponse.ok && inventoryDeleted) {
+        showToast("success", "Product and inventory deleted successfully!")
+        setUnifiedProducts(unifiedProducts.filter((p) => p.id !== productToDelete.id))
       } else {
-        const errorText = await response.text()
+        const errorText = await productResponse.text()
         showToast("error", errorText || "Failed to delete product.")
       }
     } catch (error) {
       showToast("error", "Network error. Please check your connection.")
     } finally {
       setDeletingProductId(null)
+      setDeleteDialogOpen(false)
+      setProductToDelete(null)
     }
   }
 
-  const handleAddInventory = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setAddInventoryLoading(true)
-
-    try {
-      const response = await fetch(
-        `http://localhost:5074/api/Inventory/add?email=${encodeURIComponent(email!)}&password=${encodeURIComponent(password!)}&productId=${encodeURIComponent(addInventoryData.productId)}&quantity=${encodeURIComponent(addInventoryData.quantity)}`,
-        { method: "POST" },
-      )
-
-      if (response.ok) {
-        showToast("success", "Inventory added successfully!")
-        setAddInventoryData({ productId: "", quantity: "" })
-        fetchInventories() // Refresh the list
-      } else {
-        const errorText = await response.text()
-        showToast("error", errorText || "Failed to add inventory.")
-      }
-    } catch (error) {
-      showToast("error", "Network error. Please check your connection.")
-    } finally {
-      setAddInventoryLoading(false)
-    }
-  }
-
-  const handleEditInventory = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!editingInventory) return
-
-    setEditInventoryLoading(true)
-
-    try {
-      const response = await fetch(
-        `http://localhost:5074/api/Inventory/update?email=${encodeURIComponent(email!)}&password=${encodeURIComponent(password!)}&productId=${editingInventory.productId}&quantity=${encodeURIComponent(editInventoryData.quantity)}`,
-        { method: "PUT" },
-      )
-
-      if (response.ok) {
-        showToast("success", "Inventory updated successfully!")
-        setEditingInventory(null)
-        fetchInventories() // Refresh the list
-      } else {
-        const errorText = await response.text()
-        showToast("error", errorText || "Failed to update inventory.")
-      }
-    } catch (error) {
-      showToast("error", "Network error. Please check your connection.")
-    } finally {
-      setEditInventoryLoading(false)
-    }
-  }
-
-  const handleDeleteInventory = async (inventoryId: number) => {
-    setDeletingInventoryId(inventoryId)
-
-    try {
-      const response = await fetch(
-        `http://localhost:5074/api/Inventory/delete?email=${encodeURIComponent(email!)}&password=${encodeURIComponent(password!)}&id=${inventoryId}`,
-        { method: "DELETE" },
-      )
-
-      if (response.ok) {
-        showToast("success", "Inventory deleted successfully!")
-        setInventories(inventories.filter((inv) => inv.id !== inventoryId))
-      } else {
-        const errorText = await response.text()
-        showToast("error", errorText || "Failed to delete inventory.")
-      }
-    } catch (error) {
-      showToast("error", "Network error. Please check your connection.")
-    } finally {
-      setDeletingInventoryId(null)
-    }
-  }
-
-  const openEditDialog = (product: Product) => {
+  const openEditDialog = (product: UnifiedProduct) => {
     setEditingProduct(product)
     setEditProductData({
       name: product.name,
       price: product.price.toString(),
-      stock: product.stock.toString(),
+      category: product.category,
+      quantity: product.quantity !== null ? product.quantity.toString() : "",
     })
   }
 
-  const openEditInventoryDialog = (inventory: Inventory) => {
-    setEditingInventory(inventory)
-    setEditInventoryData({
-      quantity: inventory.quantity.toString(),
-    })
+  const openDeleteDialog = (product: UnifiedProduct) => {
+    setProductToDelete(product)
+    setDeleteDialogOpen(true)
   }
 
   const handleLogout = () => {
@@ -377,370 +344,183 @@ export default function AdminDashboard() {
       )}
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
-        <Tabs defaultValue="products" className="space-y-8">
-          <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 bg-white shadow-md">
-            <TabsTrigger value="products" className="flex items-center gap-2 data-[state=active]:bg-purple-100">
-              <Package className="h-4 w-4" />
-              Products
-            </TabsTrigger>
-            <TabsTrigger value="inventory" className="flex items-center gap-2 data-[state=active]:bg-emerald-100">
-              <Warehouse className="h-4 w-4" />
-              Inventory
-            </TabsTrigger>
-          </TabsList>
+      <main className="container mx-auto px-4 py-8 space-y-8">
+        {/* Page Header */}
+        <div className="text-center space-y-2">
+          <h2 className="text-4xl font-bold text-gray-900">Product & Inventory Management</h2>
+          <p className="text-gray-600">Manage your products and inventory in one unified view</p>
+        </div>
 
-          {/* Products Tab */}
-          <TabsContent value="products" className="space-y-8">
-            {/* Page Header */}
-            <div className="text-center space-y-2">
-              <h2 className="text-4xl font-bold text-gray-900 flex items-center justify-center gap-2">
-                Manage Products <Package className="h-8 w-8 text-purple-600" />
-              </h2>
-              <p className="text-gray-600">Add, update, or remove items from your store</p>
-            </div>
+        {/* Add Product Form */}
+        <Card className="shadow-xl border-purple-100 max-w-4xl mx-auto">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Plus className="h-5 w-5 text-purple-600" />
+              Add New Product
+            </CardTitle>
+            <CardDescription>Fill in the details to add a product to your catalogue</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleAddProduct} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="add-name">Product Name</Label>
+                  <Input
+                    id="add-name"
+                    type="text"
+                    placeholder="e.g., Organic Apples"
+                    value={addProductData.name}
+                    onChange={(e) => setAddProductData({ ...addProductData, name: e.target.value })}
+                    required
+                    className="rounded-lg"
+                  />
+                </div>
 
-            {/* Add Product Form */}
-            <Card className="shadow-xl border-purple-100 max-w-3xl mx-auto">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Plus className="h-5 w-5 text-purple-600" />
-                  Add New Product
-                </CardTitle>
-                <CardDescription>Fill in the details to add a product to your catalogue</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleAddProduct} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="add-name">Product Name</Label>
-                      <Input
-                        id="add-name"
-                        type="text"
-                        placeholder="e.g., Organic Apples"
-                        value={addProductData.name}
-                        onChange={(e) => setAddProductData({ ...addProductData, name: e.target.value })}
-                        required
-                        className="rounded-lg"
-                      />
-                    </div>
+                <div className="space-y-2">
+                  <Label htmlFor="add-category">Category</Label>
+                  <Input
+                    id="add-category"
+                    type="text"
+                    placeholder="e.g., Fruits"
+                    value={addProductData.category}
+                    onChange={(e) => setAddProductData({ ...addProductData, category: e.target.value })}
+                    required
+                    className="rounded-lg"
+                  />
+                </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="add-category">Category</Label>
-                      <Input
-                        id="add-category"
-                        type="text"
-                        placeholder="e.g., Fruits"
-                        value={addProductData.category}
-                        onChange={(e) => setAddProductData({ ...addProductData, category: e.target.value })}
-                        required
-                        className="rounded-lg"
-                      />
-                    </div>
+                <div className="space-y-2">
+                  <Label htmlFor="add-price">Price ($)</Label>
+                  <Input
+                    id="add-price"
+                    type="number"
+                    step="0.01"
+                    placeholder="9.99"
+                    value={addProductData.price}
+                    onChange={(e) => setAddProductData({ ...addProductData, price: e.target.value })}
+                    required
+                    className="rounded-lg"
+                  />
+                </div>
+              </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="add-price">Price ($)</Label>
-                      <Input
-                        id="add-price"
-                        type="number"
-                        step="0.01"
-                        placeholder="9.99"
-                        value={addProductData.price}
-                        onChange={(e) => setAddProductData({ ...addProductData, price: e.target.value })}
-                        required
-                        className="rounded-lg"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="add-stock">Stock</Label>
-                      <Input
-                        id="add-stock"
-                        type="number"
-                        placeholder="100"
-                        value={addProductData.stock}
-                        onChange={(e) => setAddProductData({ ...addProductData, stock: e.target.value })}
-                        required
-                        className="rounded-lg"
-                      />
-                    </div>
-                  </div>
-
-                  <Button
-                    type="submit"
-                    className="w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 transition-all duration-200"
-                    disabled={addProductLoading}
-                  >
-                    {addProductLoading ? (
-                      <span className="flex items-center gap-2">
-                        <Spinner className="h-4 w-4" />
-                        Adding Product...
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-2">
-                        <Plus className="h-4 w-4" />
-                        Add Product
-                      </span>
-                    )}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-
-            {/* Product List */}
-            <Card className="shadow-xl border-emerald-100">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span>Product Inventory</span>
-                  <Button
-                    onClick={fetchProducts}
-                    variant="outline"
-                    size="sm"
-                    disabled={productsLoading}
-                    className="flex items-center gap-2 bg-transparent"
-                  >
-                    {productsLoading ? <Spinner className="h-4 w-4" /> : "Refresh"}
-                  </Button>
-                </CardTitle>
-                <CardDescription>View and manage all products in your store</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {productsLoading ? (
-                  <div className="flex justify-center py-8">
-                    <Spinner className="h-8 w-8 text-purple-600" />
-                  </div>
-                ) : products.length === 0 ? (
-                  <p className="text-center text-gray-500 py-8">No products yet. Add your first product above!</p>
+              <Button
+                type="submit"
+                className="w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 transition-all duration-200"
+                disabled={addProductLoading}
+              >
+                {addProductLoading ? (
+                  <span className="flex items-center gap-2">
+                    <Spinner className="h-4 w-4" />
+                    Adding Product...
+                  </span>
                 ) : (
-                  <div className="rounded-lg border overflow-hidden">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="bg-purple-50">
-                          <TableHead className="font-semibold">Name</TableHead>
-                          <TableHead className="font-semibold">Category</TableHead>
-                          <TableHead className="font-semibold">Price</TableHead>
-                          <TableHead className="font-semibold">Stock</TableHead>
-                          <TableHead className="font-semibold text-right">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {products.map((product) => (
-                          <TableRow key={product.id} className="hover:bg-gray-50 transition-colors">
-                            <TableCell className="font-medium">{product.name}</TableCell>
-                            <TableCell>{product.category}</TableCell>
-                            <TableCell className="text-emerald-600 font-semibold">
-                              ${product.price.toFixed(2)}
-                            </TableCell>
-                            <TableCell>
-                              <span
-                                className={`px-2 py-1 rounded-full text-xs ${
-                                  product.stock > 0 ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-                                }`}
-                              >
-                                {product.stock}
-                              </span>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <div className="flex justify-end gap-2">
-                                <Button
-                                  onClick={() => openEditDialog(product)}
-                                  variant="outline"
-                                  size="sm"
-                                  className="hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300"
-                                >
-                                  <Pencil className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  onClick={() => handleDeleteProduct(product.id)}
-                                  variant="outline"
-                                  size="sm"
-                                  className="hover:bg-red-50 hover:text-red-600 hover:border-red-300"
-                                  disabled={deletingProductId === product.id}
-                                >
-                                  {deletingProductId === product.id ? (
-                                    <Spinner className="h-4 w-4" />
-                                  ) : (
-                                    <Trash2 className="h-4 w-4" />
-                                  )}
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
+                  <span className="flex items-center gap-2">
+                    <Plus className="h-4 w-4" />
+                    Add Product
+                  </span>
                 )}
-              </CardContent>
-            </Card>
-          </TabsContent>
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
 
-          <TabsContent value="inventory" className="space-y-8">
-            {/* Page Header */}
-            <div className="text-center space-y-2">
-              <h2 className="text-4xl font-bold text-gray-900 flex items-center justify-center gap-2">
-                Manage Inventory <Warehouse className="h-8 w-8 text-emerald-600" />
-              </h2>
-              <p className="text-gray-600">Track and update product quantities</p>
-            </div>
-
-            {/* Add Inventory Form */}
-            <Card className="shadow-xl border-emerald-100 max-w-3xl mx-auto">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Plus className="h-5 w-5 text-emerald-600" />
-                  Add Inventory Record
-                </CardTitle>
-                <CardDescription>Select a product and set its quantity</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleAddInventory} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="add-inv-product">Product</Label>
-                      <select
-                        id="add-inv-product"
-                        value={addInventoryData.productId}
-                        onChange={(e) => setAddInventoryData({ ...addInventoryData, productId: e.target.value })}
-                        required
-                        className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                      >
-                        <option value="">Select a product</option>
-                        {products.map((product) => (
-                          <option key={product.id} value={product.id}>
-                            {product.name} (ID: {product.id})
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="add-inv-quantity">Quantity</Label>
-                      <Input
-                        id="add-inv-quantity"
-                        type="number"
-                        placeholder="100"
-                        value={addInventoryData.quantity}
-                        onChange={(e) => setAddInventoryData({ ...addInventoryData, quantity: e.target.value })}
-                        required
-                        className="rounded-lg"
-                      />
-                    </div>
-                  </div>
-
-                  <Button
-                    type="submit"
-                    className="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 transition-all duration-200"
-                    disabled={addInventoryLoading}
-                  >
-                    {addInventoryLoading ? (
-                      <span className="flex items-center gap-2">
-                        <Spinner className="h-4 w-4" />
-                        Adding Inventory...
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-2">
-                        <Plus className="h-4 w-4" />
-                        Add Inventory
-                      </span>
-                    )}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-
-            {/* Inventory List */}
-            <Card className="shadow-xl border-purple-100">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span>Inventory Records</span>
-                  <Button
-                    onClick={fetchInventories}
-                    variant="outline"
-                    size="sm"
-                    disabled={inventoriesLoading}
-                    className="flex items-center gap-2 bg-transparent"
-                  >
-                    {inventoriesLoading ? <Spinner className="h-4 w-4" /> : "Refresh"}
-                  </Button>
-                </CardTitle>
-                <CardDescription>View and manage all inventory records</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {inventoriesLoading ? (
-                  <div className="flex justify-center py-8">
-                    <Spinner className="h-8 w-8 text-emerald-600" />
-                  </div>
-                ) : inventories.length === 0 ? (
-                  <p className="text-center text-gray-500 py-8">
-                    No inventory records yet. Add your first record above!
-                  </p>
-                ) : (
-                  <div className="rounded-lg border overflow-hidden">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="bg-emerald-50">
-                          <TableHead className="font-semibold">ID</TableHead>
-                          <TableHead className="font-semibold">Product ID</TableHead>
-                          <TableHead className="font-semibold">Product Name</TableHead>
-                          <TableHead className="font-semibold">Quantity</TableHead>
-                          <TableHead className="font-semibold text-right">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {inventories.map((inventory) => (
-                          <TableRow key={inventory.id} className="hover:bg-gray-50 transition-colors">
-                            <TableCell className="font-medium">{inventory.id}</TableCell>
-                            <TableCell>{inventory.productId}</TableCell>
-                            <TableCell>{inventory.productName}</TableCell>
-                            <TableCell>
-                              <span className="px-2 py-1 rounded-full text-xs bg-emerald-100 text-emerald-700 font-semibold">
-                                {inventory.quantity}
-                              </span>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <div className="flex justify-end gap-2">
-                                <Button
-                                  onClick={() => openEditInventoryDialog(inventory)}
-                                  variant="outline"
-                                  size="sm"
-                                  className="hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300"
-                                >
-                                  <Pencil className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  onClick={() => handleDeleteInventory(inventory.id)}
-                                  variant="outline"
-                                  size="sm"
-                                  className="hover:bg-red-50 hover:text-red-600 hover:border-red-300"
-                                  disabled={deletingInventoryId === inventory.id}
-                                >
-                                  {deletingInventoryId === inventory.id ? (
-                                    <Spinner className="h-4 w-4" />
-                                  ) : (
-                                    <Trash2 className="h-4 w-4" />
-                                  )}
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+        {/* Unified Product & Inventory Table */}
+        <Card className="shadow-xl border-emerald-100">
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <span>Products & Inventory</span>
+              <Button
+                onClick={fetchUnifiedData}
+                variant="outline"
+                size="sm"
+                disabled={dataLoading}
+                className="flex items-center gap-2 bg-transparent"
+              >
+                {dataLoading ? <Spinner className="h-4 w-4" /> : "Refresh"}
+              </Button>
+            </CardTitle>
+            <CardDescription>View and manage all products with their inventory quantities</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {dataLoading ? (
+              <div className="flex justify-center py-8">
+                <Spinner className="h-8 w-8 text-purple-600" />
+              </div>
+            ) : unifiedProducts.length === 0 ? (
+              <p className="text-center text-gray-500 py-8">No products yet. Add your first product above!</p>
+            ) : (
+              <div className="rounded-lg border overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-gradient-to-r from-purple-50 to-emerald-50">
+                      <TableHead className="font-semibold">Name</TableHead>
+                      <TableHead className="font-semibold">Category</TableHead>
+                      <TableHead className="font-semibold">Price</TableHead>
+                      <TableHead className="font-semibold">Quantity</TableHead>
+                      <TableHead className="font-semibold text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {unifiedProducts.map((product) => (
+                      <TableRow key={product.id} className="hover:bg-gray-50 transition-colors">
+                        <TableCell className="font-medium">{product.name}</TableCell>
+                        <TableCell>
+                          <span className="px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-700">
+                            {product.category}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-emerald-600 font-semibold">${product.price.toFixed(2)}</TableCell>
+                        <TableCell>
+                          {product.quantity !== null ? (
+                            <span className="px-2 py-1 rounded-full text-xs bg-emerald-100 text-emerald-700 font-semibold">
+                              {product.quantity}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              onClick={() => openEditDialog(product)}
+                              variant="outline"
+                              size="sm"
+                              className="hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              onClick={() => openDeleteDialog(product)}
+                              variant="outline"
+                              size="sm"
+                              className="hover:bg-red-50 hover:text-red-600 hover:border-red-300"
+                              disabled={deletingProductId === product.id}
+                            >
+                              {deletingProductId === product.id ? (
+                                <Spinner className="h-4 w-4" />
+                              ) : (
+                                <Trash2 className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </main>
 
       {/* Edit Product Dialog */}
       <Dialog open={!!editingProduct} onOpenChange={(open) => !open && setEditingProduct(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Edit Product</DialogTitle>
-            <DialogDescription>Update the product details below</DialogDescription>
+            <DialogTitle>Edit Product & Inventory</DialogTitle>
+            <DialogDescription>Update product details and quantity</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleEditProduct} className="space-y-4">
             <div className="space-y-2">
@@ -750,6 +530,18 @@ export default function AdminDashboard() {
                 type="text"
                 value={editProductData.name}
                 onChange={(e) => setEditProductData({ ...editProductData, name: e.target.value })}
+                required
+                className="rounded-lg"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-category">Category</Label>
+              <Input
+                id="edit-category"
+                type="text"
+                value={editProductData.category}
+                onChange={(e) => setEditProductData({ ...editProductData, category: e.target.value })}
                 required
                 className="rounded-lg"
               />
@@ -770,13 +562,13 @@ export default function AdminDashboard() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="edit-stock">Stock</Label>
+                <Label htmlFor="edit-quantity">Quantity</Label>
                 <Input
-                  id="edit-stock"
+                  id="edit-quantity"
                   type="number"
-                  value={editProductData.stock}
-                  onChange={(e) => setEditProductData({ ...editProductData, stock: e.target.value })}
-                  required
+                  placeholder="Leave blank to skip"
+                  value={editProductData.quantity}
+                  onChange={(e) => setEditProductData({ ...editProductData, quantity: e.target.value })}
                   className="rounded-lg"
                 />
               </div>
@@ -793,7 +585,7 @@ export default function AdminDashboard() {
               </Button>
               <Button
                 type="submit"
-                className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800"
+                className="bg-gradient-to-r from-purple-600 to-emerald-600 hover:from-purple-700 hover:to-emerald-700"
                 disabled={editProductLoading}
               >
                 {editProductLoading ? (
@@ -810,50 +602,43 @@ export default function AdminDashboard() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!editingInventory} onOpenChange={(open) => !open && setEditingInventory(null)}>
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Edit Inventory</DialogTitle>
-            <DialogDescription>Update the inventory quantity below</DialogDescription>
+            <DialogTitle>Confirm Deletion</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete "{productToDelete?.name}"? This will remove both the product and its
+              inventory record.
+            </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleEditInventory} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="edit-inv-quantity">Quantity</Label>
-              <Input
-                id="edit-inv-quantity"
-                type="number"
-                value={editInventoryData.quantity}
-                onChange={(e) => setEditInventoryData({ ...editInventoryData, quantity: e.target.value })}
-                required
-                className="rounded-lg"
-              />
-            </div>
-
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setEditingInventory(null)}
-                disabled={editInventoryLoading}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                className="bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800"
-                disabled={editInventoryLoading}
-              >
-                {editInventoryLoading ? (
-                  <span className="flex items-center gap-2">
-                    <Spinner className="h-4 w-4" />
-                    Saving...
-                  </span>
-                ) : (
-                  "Save Changes"
-                )}
-              </Button>
-            </DialogFooter>
-          </form>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setDeleteDialogOpen(false)
+                setProductToDelete(null)
+              }}
+              disabled={deletingProductId !== null}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleDeleteProduct}
+              className="bg-red-600 hover:bg-red-700"
+              disabled={deletingProductId !== null}
+            >
+              {deletingProductId !== null ? (
+                <span className="flex items-center gap-2">
+                  <Spinner className="h-4 w-4" />
+                  Deleting...
+                </span>
+              ) : (
+                "Delete"
+              )}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
