@@ -78,7 +78,6 @@ export default function AuthPage() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md space-y-6">
-        {/* Logo and Tagline */}
         <div className="text-center space-y-2">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-emerald-500 bg-clip-text text-transparent">
             Your Local Shop
@@ -86,7 +85,6 @@ export default function AuthPage() {
           <p className="text-gray-600">Welcome to Your Local Shop — Sign in to continue</p>
         </div>
 
-        {/* Auth Card */}
         <Card className="shadow-xl border-purple-100">
           <CardHeader>
             <CardTitle className="text-2xl text-center">Get Started</CardTitle>
@@ -99,7 +97,6 @@ export default function AuthPage() {
                 <TabsTrigger value="signup">Sign Up</TabsTrigger>
               </TabsList>
 
-              {/* Sign In Tab */}
               <TabsContent value="signin">
                 <form onSubmit={handleSignIn} className="space-y-4">
                   <div className="space-y-2">
@@ -150,7 +147,6 @@ export default function AuthPage() {
                 </form>
               </TabsContent>
 
-              {/* Sign Up Tab */}
               <TabsContent value="signup">
                 <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="space-y-2">
@@ -231,7 +227,6 @@ export default function AuthPage() {
           </CardContent>
         </Card>
 
-        {/* Footer */}
         <p className="text-center text-sm text-gray-500">© 2025 Your Local Shop. All rights reserved.</p>
       </div>
     </div>
