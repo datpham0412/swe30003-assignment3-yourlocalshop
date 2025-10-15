@@ -47,3 +47,7 @@ coverage*.xml
 launchSettings.json
 *.db
 *.sqlite
+
+.localshop.db
+localshop.db-shm
+localshop.db-wal
