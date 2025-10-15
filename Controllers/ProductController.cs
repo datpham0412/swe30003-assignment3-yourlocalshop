@@ -16,7 +16,7 @@ namespace Assignment_3_SWE30003.Controllers
         }
 
         [HttpPost("add")]
-        public IActionResult Add(string email, string password, string name, string category, decimal price, int stock)
+        public IActionResult Add(string email, string password, string name, string category, decimal price)
         {
             var admin = _context.Accounts.FirstOrDefault(a => a.Email == email && a.Password == password && a.Role == "Admin");
             if (admin == null) return Unauthorized("Access denied. Only Admins can add products.");
@@ -27,7 +27,7 @@ namespace Assignment_3_SWE30003.Controllers
         }
 
         [HttpPut("update")]
-        public IActionResult Update(string email, string password, int id, string? name, string? category, decimal? price, int? stock)
+        public IActionResult Update(string email, string password, int id, string? name, string? category, decimal? price)
         {
             var admin = _context.Accounts.FirstOrDefault(a => a.Email == email && a.Password == password && a.Role == "Admin");
             if (admin == null) return Unauthorized("Access denied. Only Admins can update products.");

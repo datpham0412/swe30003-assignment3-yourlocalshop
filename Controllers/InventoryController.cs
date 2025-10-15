@@ -4,7 +4,6 @@ using Assignment_3_SWE30003.Data;
 
 namespace Assignment_3_SWE30003.Controllers
 {
-
     [ApiController]
     [Route("api/[controller]")]
     public class InventoryController : ControllerBase
@@ -19,34 +18,50 @@ namespace Assignment_3_SWE30003.Controllers
         [HttpPost("add")]
         public IActionResult Add(string email, string password, int productId, int quantity)
         {
-            var admin = _context.Accounts.FirstOrDefault(a => a.Email == email && a.Password == password && a.Role == "Admin");
-            if (admin == null) return Unauthorized("Access denied.");
+            var admin = _context.Accounts.FirstOrDefault(a =>
+                a.Email == email && a.Password == password && a.Role == "Admin");
 
-            return Ok(Inventory.AddInventory(_context, productId, quantity));
+            if (admin == null)
+                return Unauthorized("Access denied. Only Admins can add inventory records.");
+
+            var adminAcc = new AdminAccount(_context);
+            var result = adminAcc.AddInventory(productId, quantity);
+            return Ok(result);
         }
 
         [HttpPut("update")]
         public IActionResult Update(string email, string password, int productId, int quantity)
         {
-            var admin = _context.Accounts.FirstOrDefault(a => a.Email == email && a.Password == password && a.Role == "Admin");
-            if (admin == null) return Unauthorized("Access denied.");
+            var admin = _context.Accounts.FirstOrDefault(a =>
+                a.Email == email && a.Password == password && a.Role == "Admin");
 
-            return Ok(Inventory.UpdateQuantity(_context, productId, quantity));
+            if (admin == null)
+                return Unauthorized("Access denied. Only Admins can update inventory records.");
+
+            var adminAcc = new AdminAccount(_context);
+            var result = adminAcc.UpdateInventory(productId, quantity);
+            return Ok(result);
         }
 
         [HttpDelete("delete")]
         public IActionResult Delete(string email, string password, int productId)
         {
-            var admin = _context.Accounts.FirstOrDefault(a => a.Email == email && a.Password == password && a.Role == "Admin");
-            if (admin == null) return Unauthorized("Access denied.");
+            var admin = _context.Accounts.FirstOrDefault(a =>
+                a.Email == email && a.Password == password && a.Role == "Admin");
 
-            return Ok(Inventory.DeleteInventory(_context, productId));
+            if (admin == null)
+                return Unauthorized("Access denied. Only Admins can delete inventory records.");
+
+            var adminAcc = new AdminAccount(_context);
+            var result = adminAcc.DeleteInventory(productId);
+            return Ok(result);
         }
 
         [HttpGet("list")]
         public IActionResult List()
         {
-            return Ok(Inventory.GetAllInventories(_context));
+            var inventories = Inventory.GetAllInventories(_context);
+            return Ok(inventories);
         }
     }
 }

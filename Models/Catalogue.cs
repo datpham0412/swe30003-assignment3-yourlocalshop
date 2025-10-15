@@ -1,11 +1,29 @@
-using System.Collections.Generic;
+using Assignment_3_SWE30003.Data;
 
 namespace Assignment_3_SWE30003.Models
 {
     public class Catalogue
     {
-        public int Id { get; set; }
-        public string Title { get; set; } = "Your Local Shop Catalogue";
-        public List<Product> Products { get; set; } = new List<Product>();
+        private readonly AppDbContext _context;
+
+        public Catalogue(AppDbContext context)
+        {
+            _context = context;
+        }
+
+        public List<Product> DisplayProducts()
+        {
+            return Product.GetCatalogueProducts(_context);
+        }
+
+        public string AddProductToCatalogue(int productId)
+        {
+            return Product.AddToCatalogue(_context, productId);
+        }
+
+        public string RemoveProductFromCatalogue(int productId)
+        {
+            return Product.RemoveFromCatalogue(_context, productId);
+        }
     }
 }

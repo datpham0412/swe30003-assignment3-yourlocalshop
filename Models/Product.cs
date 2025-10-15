@@ -9,7 +9,7 @@ namespace Assignment_3_SWE30003.Models
         public string Name { get; set; } = string.Empty;
         public string Category { get; set; } = string.Empty;
         public decimal Price { get; set; }
-
+        public bool IsInCatalogue { get; set; } = false; 
         public string AddToDatabase(AppDbContext context)
         {
             if (string.IsNullOrWhiteSpace(Name))
@@ -53,6 +53,47 @@ namespace Assignment_3_SWE30003.Models
         public static List<Product> GetAllProducts(AppDbContext context)
         {
             return context.Products.ToList();
+        }
+        public static string AddToCatalogue(AppDbContext context, int productId)
+        {
+            var product = context.Products.FirstOrDefault(p => p.Id == productId);
+            if (product == null)
+                return "Product not found.";
+
+            if (product.IsInCatalogue)
+                return $"'{product.Name}' is already in the catalogue.";
+
+            product.IsInCatalogue = true;
+            context.SaveChanges();
+            return $"'{product.Name}' has been added to the catalogue.";
+        }
+
+        public static string RemoveFromCatalogue(AppDbContext context, int productId)
+        {
+            var product = context.Products.FirstOrDefault(p => p.Id == productId);
+            if (product == null)
+                return "Product not found.";
+
+            if (!product.IsInCatalogue)
+                return $"'{product.Name}' is not currently in the catalogue.";
+
+            product.IsInCatalogue = false;
+            context.SaveChanges();
+            return $"'{product.Name}' has been removed from the catalogue.";
+        }
+
+        public static List<Product> GetCatalogueProducts(AppDbContext context)
+        {
+            return context.Products
+                .Where(p => p.IsInCatalogue)
+                .Select(p => new Product
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    Category = p.Category,
+                    Price = p.Price
+                })
+                .ToList();
         }
     }
 }

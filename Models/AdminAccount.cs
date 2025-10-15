@@ -27,5 +27,41 @@ namespace Assignment_3_SWE30003.Models
         {
             return Product.GetAllProducts(_context);
         }
+        public string AddInventory(int productId, int quantity)
+        {
+            return Inventory.AddInventory(_context, productId, quantity);
+        }
+
+        public string UpdateInventory(int productId, int quantity)
+        {
+            return Inventory.UpdateQuantity(_context, productId, quantity);
+        }
+
+        public string DeleteInventory(int productId)
+        {
+            return Inventory.DeleteInventory(_context, productId);
+        }
+
+        public List<Inventory> ViewAllInventory()
+        {
+            return Inventory.GetAllInventories(_context);
+        }
+        public string AddProductToCatalogue(int productId)
+        {
+            var catalogue = new Catalogue(_context);
+            return catalogue.AddProductToCatalogue(productId);
+        }
+
+        public string RemoveProductFromCatalogue(int productId)
+        {
+            var catalogue = new Catalogue(_context);
+            return catalogue.RemoveProductFromCatalogue(productId);
+        }
+
+        public List<Product> ViewCatalogue()
+        {
+            var catalogue = new Catalogue(_context);
+            return catalogue.DisplayProducts();
+        }
     }
 }
