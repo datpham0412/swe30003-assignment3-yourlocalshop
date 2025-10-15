@@ -191,7 +191,7 @@ export default function AdminDashboard() {
       // Update product if needed
       if (productChanged) {
         const response = await fetch(
-          `http://localhost:5074/api/Product/update?email=${encodeURIComponent(email!)}&password=${encodeURIComponent(password!)}&id=${editingProduct.id}&name=${encodeURIComponent(editProductData.name)}&price=${encodeURIComponent(editProductData.price)}`,
+          `http://localhost:5074/api/Product/update?email=${encodeURIComponent(email!)}&password=${encodeURIComponent(password!)}&id=${editingProduct.id}&name=${encodeURIComponent(editProductData.name)}&category=${encodeURIComponent(editProductData.category)}&price=${encodeURIComponent(editProductData.price)}`,
           { method: "PUT" },
         )
         productUpdateSuccess = response.ok
@@ -206,7 +206,7 @@ export default function AdminDashboard() {
         if (editingProduct.inventoryId !== null) {
           // Update existing inventory
           const response = await fetch(
-            `http://localhost:5074/api/Inventory/update?email=${encodeURIComponent(email!)}&password=${encodeURIComponent(password!)}&id=${editingProduct.inventoryId}&quantity=${encodeURIComponent(editProductData.quantity)}`,
+            `http://localhost:5074/api/Inventory/update?email=${encodeURIComponent(email!)}&password=${encodeURIComponent(password!)}&productId=${editingProduct.inventoryId}&quantity=${encodeURIComponent(editProductData.quantity)}`,
             { method: "PUT" },
           )
           inventoryUpdateSuccess = response.ok
@@ -256,7 +256,7 @@ export default function AdminDashboard() {
       let inventoryDeleted = true
       if (productToDelete.inventoryId !== null) {
         const inventoryResponse = await fetch(
-          `http://localhost:5074/api/Inventory/delete?email=${encodeURIComponent(email!)}&password=${encodeURIComponent(password!)}&id=${productToDelete.inventoryId}`,
+          `http://localhost:5074/api/Inventory/delete?email=${encodeURIComponent(email!)}&password=${encodeURIComponent(password!)}&productId=${productToDelete.inventoryId}`,
           { method: "DELETE" },
         )
         inventoryDeleted = inventoryResponse.ok
