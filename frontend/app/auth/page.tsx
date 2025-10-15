@@ -3,6 +3,7 @@
 import type React from "react"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -12,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Spinner } from "@/components/ui/spinner"
 
 export default function AuthPage() {
+  const router = useRouter()
   const [signInData, setSignInData] = useState({ email: "", password: "" })
   const [signUpData, setSignUpData] = useState({ email: "", password: "", confirmPassword: "", role: "Customer" })
   const [signInLoading, setSignInLoading] = useState(false)
@@ -31,8 +33,18 @@ export default function AuthPage() {
       )
 
       if (response.ok) {
+        const data = await response.json()
+        const role = data.role || "Customer"
+
+        localStorage.setItem("email", signInData.email)
+        localStorage.setItem("password", signInData.password)
+        localStorage.setItem("role", role)
+
         setSignInMessage({ type: "success", text: "Successfully signed in!" })
-        setSignInData({ email: "", password: "" })
+
+        setTimeout(() => {
+          router.push("/dashboard")
+        }, 500)
       } else {
         const errorText = await response.text()
         setSignInMessage({ type: "error", text: errorText || "Sign in failed. Please try again." })
