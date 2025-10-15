@@ -10,14 +10,14 @@ namespace Assignment_3_SWE30003.Models
             Role = "Admin";
             _context = context;
         }
-        public string AddProduct(string name, string category, decimal price, int stock)
+        public string AddProduct(string name, string category, decimal price)
         {
-            var product = new Product { Name = name, Category = category, Price = price, Stock = stock };
+            var product = new Product { Name = name, Category = category, Price = price};
             return product.AddToDatabase(_context);
         }
         public string UpdateProduct(int id, string? name = null, string? category = null, decimal? price = null, int? stock = null)
         {
-            return Product.UpdateProduct(_context, id, name, category, price, stock);
+            return Product.UpdateProduct(_context, id, name, category, price);
         }
         public string DeleteProduct(int id)
         {

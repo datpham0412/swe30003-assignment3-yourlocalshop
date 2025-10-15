@@ -9,5 +9,6 @@ namespace Assignment_3_SWE30003.Data
         public DbSet<Account> Accounts { get; set; }
         public DbSet<Product> Products { get; set; }
         public DbSet<Catalogue> Catalogues { get; set; }    
+        public DbSet<Inventory> Inventories { get; set; }
     }
 }

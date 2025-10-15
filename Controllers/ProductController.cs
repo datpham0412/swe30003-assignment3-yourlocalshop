@@ -22,7 +22,7 @@ namespace Assignment_3_SWE30003.Controllers
             if (admin == null) return Unauthorized("Access denied. Only Admins can add products.");
 
             var adminAcc = new AdminAccount(_context);
-            var result = adminAcc.AddProduct(name, category, price, stock);
+            var result = adminAcc.AddProduct(name, category, price);
             return Ok(result);
         }
 
@@ -33,7 +33,7 @@ namespace Assignment_3_SWE30003.Controllers
             if (admin == null) return Unauthorized("Access denied. Only Admins can update products.");
 
             var adminAcc = new AdminAccount(_context);
-            var result = adminAcc.UpdateProduct(id, name, category, price, stock);
+            var result = adminAcc.UpdateProduct(id, name, category, price);
             return Ok(result);
         }
 

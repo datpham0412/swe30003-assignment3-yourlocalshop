@@ -9,7 +9,6 @@ namespace Assignment_3_SWE30003.Models
         public string Name { get; set; } = string.Empty;
         public string Category { get; set; } = string.Empty;
         public decimal Price { get; set; }
-        public int Stock { get; set; }
 
         public string AddToDatabase(AppDbContext context)
         {
@@ -26,8 +25,7 @@ namespace Assignment_3_SWE30003.Models
             int id,
             string? name = null,
             string? category = null,
-            decimal? price = null,
-            int? stock = null)
+            decimal? price = null)
         {
             var product = context.Products.FirstOrDefault(p => p.Id == id);
             if (product == null)
@@ -36,7 +34,6 @@ namespace Assignment_3_SWE30003.Models
             if (!string.IsNullOrWhiteSpace(name)) product.Name = name;
             if (!string.IsNullOrWhiteSpace(category)) product.Category = category;
             if (price.HasValue) product.Price = price.Value;
-            if (stock.HasValue) product.Stock = stock.Value;
 
             context.SaveChanges();
             return $"Product '{product.Name}' updated successfully!";
