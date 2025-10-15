@@ -106,7 +106,6 @@ export default function AdminDashboard() {
   const fetchUnifiedData = async () => {
     setDataLoading(true)
     try {
-      // Fetch both products and inventories in parallel
       const [productsResponse, inventoriesResponse] = await Promise.all([
         fetch("http://localhost:5074/api/Product/list"),
         fetch("http://localhost:5074/api/Inventory/list"),
@@ -121,7 +120,6 @@ export default function AdminDashboard() {
       const products: Product[] = await productsResponse.json()
       const inventories: Inventory[] = inventoriesResponse.ok ? await inventoriesResponse.json() : []
 
-      // Merge products with their inventory data
       const unified: UnifiedProduct[] = products.map((product) => {
         const inventory = inventories.find((inv) => inv.productId === product.id)
         return {
@@ -177,18 +175,15 @@ export default function AdminDashboard() {
       let productUpdateSuccess = true
       let inventoryUpdateSuccess = true
 
-      // Check if product fields changed
       const productChanged =
         editProductData.name !== editingProduct.name ||
         Number.parseFloat(editProductData.price) !== editingProduct.price ||
         editProductData.category !== editingProduct.category
 
-      // Check if quantity changed
       const quantityChanged =
         editProductData.quantity !== "" &&
         (editingProduct.quantity === null || Number.parseInt(editProductData.quantity) !== editingProduct.quantity)
 
-      // Update product if needed
       if (productChanged) {
         const response = await fetch(
           `http://localhost:5074/api/Product/update?email=${encodeURIComponent(email!)}&password=${encodeURIComponent(password!)}&id=${editingProduct.id}&name=${encodeURIComponent(editProductData.name)}&category=${encodeURIComponent(editProductData.category)}&price=${encodeURIComponent(editProductData.price)}`,
@@ -201,10 +196,8 @@ export default function AdminDashboard() {
         }
       }
 
-      // Update or add inventory if quantity changed
       if (quantityChanged && editProductData.quantity !== "") {
         if (editingProduct.inventoryId !== null) {
-          // Update existing inventory
           const response = await fetch(
             `http://localhost:5074/api/Inventory/update?email=${encodeURIComponent(email!)}&password=${encodeURIComponent(password!)}&productId=${editingProduct.id}&quantity=${encodeURIComponent(editProductData.quantity)}`,
             { method: "PUT" },
@@ -215,7 +208,6 @@ export default function AdminDashboard() {
             showToast("error", errorText || "Failed to update inventory.")
           }
         } else {
-          // Add new inventory
           const response = await fetch(
             `http://localhost:5074/api/Inventory/add?email=${encodeURIComponent(email!)}&password=${encodeURIComponent(password!)}&productId=${editingProduct.id}&quantity=${encodeURIComponent(editProductData.quantity)}`,
             { method: "POST" },
@@ -231,7 +223,7 @@ export default function AdminDashboard() {
       if (productUpdateSuccess && inventoryUpdateSuccess) {
         showToast("success", "Product updated successfully!")
         setEditingProduct(null)
-        fetchUnifiedData() // Refresh the list
+        fetchUnifiedData() 
       }
     } catch (error) {
       showToast("error", "Network error. Please check your connection.")
@@ -246,13 +238,11 @@ export default function AdminDashboard() {
     setDeletingProductId(productToDelete.id)
 
     try {
-      // Delete product
       const productResponse = await fetch(
         `http://localhost:5074/api/Product/delete?email=${encodeURIComponent(email!)}&password=${encodeURIComponent(password!)}&id=${productToDelete.id}`,
         { method: "DELETE" },
       )
 
-      // Delete inventory if exists
       let inventoryDeleted = true
       if (productToDelete.inventoryId !== null) {
         const inventoryResponse = await fetch(
@@ -310,7 +300,6 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-emerald-50">
-      {/* Header */}
       <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50 shadow-sm">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-emerald-500 bg-clip-text text-transparent">
@@ -328,7 +317,6 @@ export default function AdminDashboard() {
         </div>
       </header>
 
-      {/* Toast Notification */}
       {toast && (
         <div className="fixed top-20 right-4 z-50 animate-in slide-in-from-top-5">
           <div
@@ -343,15 +331,12 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* Main Content */}
       <main className="container mx-auto px-4 py-8 space-y-8">
-        {/* Page Header */}
         <div className="text-center space-y-2">
           <h2 className="text-4xl font-bold text-gray-900">Product & Inventory Management</h2>
           <p className="text-gray-600">Manage your products and inventory in one unified view</p>
         </div>
 
-        {/* Add Product Form */}
         <Card className="shadow-xl border-purple-100 max-w-4xl mx-auto">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -425,7 +410,6 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        {/* Unified Product & Inventory Table */}
         <Card className="shadow-xl border-emerald-100">
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
@@ -602,7 +586,6 @@ export default function AdminDashboard() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -642,7 +625,6 @@ export default function AdminDashboard() {
         </DialogContent>
       </Dialog>
 
-      {/* Footer */}
       <footer className="mt-12 py-6 text-center text-sm text-gray-500 border-t">
         © 2025 Your Local Shop. All rights reserved.
       </footer>
