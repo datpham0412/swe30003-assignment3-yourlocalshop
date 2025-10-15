@@ -206,7 +206,7 @@ export default function AdminDashboard() {
         if (editingProduct.inventoryId !== null) {
           // Update existing inventory
           const response = await fetch(
-            `http://localhost:5074/api/Inventory/update?email=${encodeURIComponent(email!)}&password=${encodeURIComponent(password!)}&productId=${editingProduct.inventoryId}&quantity=${encodeURIComponent(editProductData.quantity)}`,
+            `http://localhost:5074/api/Inventory/update?email=${encodeURIComponent(email!)}&password=${encodeURIComponent(password!)}&productId=${editingProduct.id}&quantity=${encodeURIComponent(editProductData.quantity)}`,
             { method: "PUT" },
           )
           inventoryUpdateSuccess = response.ok
