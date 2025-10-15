@@ -18,9 +18,12 @@ namespace Assignment_3_SWE30003.Managers
             if (_context.Accounts.Any(a => a.Email == email))
                 return "Account with this email already exists.";
 
-            Account newAccount = role.ToLower() == "admin"
-                ? new AdminAccount { Email = email, Password = password }
-                : new CustomerAccount { Email = email, Password = password };
+            Account newAccount;
+
+            if (role.ToLower() == "admin")
+                newAccount = new AdminAccount(_context) { Email = email, Password = password };
+            else
+                newAccount = new CustomerAccount { Email = email, Password = password };
 
             _context.Accounts.Add(newAccount);
             _context.SaveChanges();
