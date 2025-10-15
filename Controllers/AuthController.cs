@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
+using Assignment_3_SWE30003.Managers;
 using Assignment_3_SWE30003.Data;
 using Assignment_3_SWE30003.Models;
-using System.Linq;
 
 namespace Assignment_3_SWE30003.Controllers
 {
@@ -9,30 +9,24 @@ namespace Assignment_3_SWE30003.Controllers
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly AccountManager _manager;
 
         public AuthController(AppDbContext context)
         {
-            _context = context;
+            _manager = new AccountManager(context);
         }
 
         [HttpPost("register")]
-        public IActionResult Register(Account account)
+        public IActionResult Register(string email, string password, string role = "Customer")
         {
-            if (_context.Accounts.Any(a => a.Username == account.Username))
-                return BadRequest("Username already exists!");
-
-            _context.Accounts.Add(account);
-            _context.SaveChanges();
-            return Ok("Registration successful!");
+            var result = _manager.CreateAccount(email, password, role);
+            return Ok(result);
         }
 
         [HttpPost("login")]
-        public IActionResult Login(Account loginData)
+        public IActionResult Login(string email, string password)
         {
-            var user = _context.Accounts
-                .FirstOrDefault(a => a.Username == loginData.Username && a.Password == loginData.Password);
-
+            var user = _manager.Authenticate(email, password);
             if (user == null)
                 return Unauthorized("Invalid credentials!");
 
@@ -40,4 +34,3 @@ namespace Assignment_3_SWE30003.Controllers
         }
     }
 }
-

@@ -1,11 +1,17 @@
 namespace Assignment_3_SWE30003.Models
 {
-    public class Account
+    public class Account   
     {
         public int Id { get; set; }
-        public string Username { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
-        public string Role { get; set; } = "Customer"; // or "Admin"
+        public string Status { get; set; } = "Active";
+        public string Role { get; set; } = "Customer";
+
+        public void ManageAccountInfo(string email, string password)
+        {
+            Email = email;
+            Password = password;
+        }
     }
 }
-
