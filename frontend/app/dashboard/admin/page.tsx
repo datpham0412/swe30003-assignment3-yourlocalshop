@@ -18,7 +18,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { LogOut, Package, Pencil, Trash2, Plus } from "lucide-react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { LogOut, Package, Pencil, Trash2, Plus, Warehouse } from "lucide-react"
 
 interface Product {
   id: number
@@ -26,6 +27,13 @@ interface Product {
   price: number
   category: string
   stock: number
+}
+
+interface Inventory {
+  id: number
+  productId: number
+  productName?: string
+  quantity: number
 }
 
 export default function AdminDashboard() {
@@ -59,6 +67,27 @@ export default function AdminDashboard() {
   // Delete product state
   const [deletingProductId, setDeletingProductId] = useState<number | null>(null)
 
+  // Inventory list state
+  const [inventories, setInventories] = useState<Inventory[]>([])
+  const [inventoriesLoading, setInventoriesLoading] = useState(false)
+
+  // Add inventory state
+  const [addInventoryData, setAddInventoryData] = useState({
+    productId: "",
+    quantity: "",
+  })
+  const [addInventoryLoading, setAddInventoryLoading] = useState(false)
+
+  // Edit inventory state
+  const [editingInventory, setEditingInventory] = useState<Inventory | null>(null)
+  const [editInventoryData, setEditInventoryData] = useState({
+    quantity: "",
+  })
+  const [editInventoryLoading, setEditInventoryLoading] = useState(false)
+
+  // Delete inventory state
+  const [deletingInventoryId, setDeletingInventoryId] = useState<number | null>(null)
+
   // Toast message state
   const [toast, setToast] = useState<{ type: "success" | "error"; text: string } | null>(null)
 
@@ -82,8 +111,9 @@ export default function AdminDashboard() {
     setPassword(storedPassword)
     setLoading(false)
 
-    // Fetch products on mount
+    // Fetch products and inventories on mount
     fetchProducts()
+    fetchInventories()
   }, [router])
 
   const showToast = (type: "success" | "error", text: string) => {
@@ -105,6 +135,28 @@ export default function AdminDashboard() {
       showToast("error", "Network error. Please check your connection.")
     } finally {
       setProductsLoading(false)
+    }
+  }
+
+  const fetchInventories = async () => {
+    setInventoriesLoading(true)
+    try {
+      const response = await fetch("http://localhost:5074/api/Inventory/list")
+      if (response.ok) {
+        const data = await response.json()
+        // Map product names to inventory records
+        const inventoriesWithNames = data.map((inv: Inventory) => {
+          const product = products.find((p) => p.id === inv.productId)
+          return { ...inv, productName: product?.name || "Unknown Product" }
+        })
+        setInventories(inventoriesWithNames)
+      } else {
+        showToast("error", "Failed to load inventories.")
+      }
+    } catch (error) {
+      showToast("error", "Network error. Please check your connection.")
+    } finally {
+      setInventoriesLoading(false)
     }
   }
 
@@ -183,12 +235,94 @@ export default function AdminDashboard() {
     }
   }
 
+  const handleAddInventory = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setAddInventoryLoading(true)
+
+    try {
+      const response = await fetch(
+        `http://localhost:5074/api/Inventory/add?email=${encodeURIComponent(email!)}&password=${encodeURIComponent(password!)}&productId=${encodeURIComponent(addInventoryData.productId)}&quantity=${encodeURIComponent(addInventoryData.quantity)}`,
+        { method: "POST" },
+      )
+
+      if (response.ok) {
+        showToast("success", "Inventory added successfully!")
+        setAddInventoryData({ productId: "", quantity: "" })
+        fetchInventories() // Refresh the list
+      } else {
+        const errorText = await response.text()
+        showToast("error", errorText || "Failed to add inventory.")
+      }
+    } catch (error) {
+      showToast("error", "Network error. Please check your connection.")
+    } finally {
+      setAddInventoryLoading(false)
+    }
+  }
+
+  const handleEditInventory = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!editingInventory) return
+
+    setEditInventoryLoading(true)
+
+    try {
+      const response = await fetch(
+        `http://localhost:5074/api/Inventory/update?email=${encodeURIComponent(email!)}&password=${encodeURIComponent(password!)}&productId=${editingInventory.productId}&quantity=${encodeURIComponent(editInventoryData.quantity)}`,
+        { method: "PUT" },
+      )
+
+      if (response.ok) {
+        showToast("success", "Inventory updated successfully!")
+        setEditingInventory(null)
+        fetchInventories() // Refresh the list
+      } else {
+        const errorText = await response.text()
+        showToast("error", errorText || "Failed to update inventory.")
+      }
+    } catch (error) {
+      showToast("error", "Network error. Please check your connection.")
+    } finally {
+      setEditInventoryLoading(false)
+    }
+  }
+
+  const handleDeleteInventory = async (inventoryId: number) => {
+    setDeletingInventoryId(inventoryId)
+
+    try {
+      const response = await fetch(
+        `http://localhost:5074/api/Inventory/delete?email=${encodeURIComponent(email!)}&password=${encodeURIComponent(password!)}&id=${inventoryId}`,
+        { method: "DELETE" },
+      )
+
+      if (response.ok) {
+        showToast("success", "Inventory deleted successfully!")
+        setInventories(inventories.filter((inv) => inv.id !== inventoryId))
+      } else {
+        const errorText = await response.text()
+        showToast("error", errorText || "Failed to delete inventory.")
+      }
+    } catch (error) {
+      showToast("error", "Network error. Please check your connection.")
+    } finally {
+      setDeletingInventoryId(null)
+    }
+  }
+
   const openEditDialog = (product: Product) => {
     setEditingProduct(product)
     setEditProductData({
       name: product.name,
       price: product.price.toString(),
       stock: product.stock.toString(),
+    })
+  }
+
+  const openEditInventoryDialog = (inventory: Inventory) => {
+    setEditingInventory(inventory)
+    setEditInventoryData({
+      quantity: inventory.quantity.toString(),
     })
   }
 
@@ -213,7 +347,7 @@ export default function AdminDashboard() {
       <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50 shadow-sm">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-emerald-500 bg-clip-text text-transparent">
-            Your Local Shop
+            Your Local Shop — Admin Dashboard
           </h1>
           <Button
             onClick={handleLogout}
@@ -243,190 +377,366 @@ export default function AdminDashboard() {
       )}
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8 space-y-8">
-        {/* Page Header */}
-        <div className="text-center space-y-2">
-          <h2 className="text-4xl font-bold text-gray-900 flex items-center justify-center gap-2">
-            Manage Products <Package className="h-8 w-8 text-purple-600" />
-          </h2>
-          <p className="text-gray-600">Add, update, or remove items from your store</p>
-        </div>
+      <main className="container mx-auto px-4 py-8">
+        <Tabs defaultValue="products" className="space-y-8">
+          <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 bg-white shadow-md">
+            <TabsTrigger value="products" className="flex items-center gap-2 data-[state=active]:bg-purple-100">
+              <Package className="h-4 w-4" />
+              Products
+            </TabsTrigger>
+            <TabsTrigger value="inventory" className="flex items-center gap-2 data-[state=active]:bg-emerald-100">
+              <Warehouse className="h-4 w-4" />
+              Inventory
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Add Product Form */}
-        <Card className="shadow-xl border-purple-100 max-w-3xl mx-auto">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Plus className="h-5 w-5 text-purple-600" />
-              Add New Product
-            </CardTitle>
-            <CardDescription>Fill in the details to add a product to your catalogue</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleAddProduct} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="add-name">Product Name</Label>
-                  <Input
-                    id="add-name"
-                    type="text"
-                    placeholder="e.g., Organic Apples"
-                    value={addProductData.name}
-                    onChange={(e) => setAddProductData({ ...addProductData, name: e.target.value })}
-                    required
-                    className="rounded-lg"
-                  />
-                </div>
+          {/* Products Tab */}
+          <TabsContent value="products" className="space-y-8">
+            {/* Page Header */}
+            <div className="text-center space-y-2">
+              <h2 className="text-4xl font-bold text-gray-900 flex items-center justify-center gap-2">
+                Manage Products <Package className="h-8 w-8 text-purple-600" />
+              </h2>
+              <p className="text-gray-600">Add, update, or remove items from your store</p>
+            </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="add-category">Category</Label>
-                  <Input
-                    id="add-category"
-                    type="text"
-                    placeholder="e.g., Fruits"
-                    value={addProductData.category}
-                    onChange={(e) => setAddProductData({ ...addProductData, category: e.target.value })}
-                    required
-                    className="rounded-lg"
-                  />
-                </div>
+            {/* Add Product Form */}
+            <Card className="shadow-xl border-purple-100 max-w-3xl mx-auto">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Plus className="h-5 w-5 text-purple-600" />
+                  Add New Product
+                </CardTitle>
+                <CardDescription>Fill in the details to add a product to your catalogue</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleAddProduct} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="add-name">Product Name</Label>
+                      <Input
+                        id="add-name"
+                        type="text"
+                        placeholder="e.g., Organic Apples"
+                        value={addProductData.name}
+                        onChange={(e) => setAddProductData({ ...addProductData, name: e.target.value })}
+                        required
+                        className="rounded-lg"
+                      />
+                    </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="add-price">Price ($)</Label>
-                  <Input
-                    id="add-price"
-                    type="number"
-                    step="0.01"
-                    placeholder="9.99"
-                    value={addProductData.price}
-                    onChange={(e) => setAddProductData({ ...addProductData, price: e.target.value })}
-                    required
-                    className="rounded-lg"
-                  />
-                </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="add-category">Category</Label>
+                      <Input
+                        id="add-category"
+                        type="text"
+                        placeholder="e.g., Fruits"
+                        value={addProductData.category}
+                        onChange={(e) => setAddProductData({ ...addProductData, category: e.target.value })}
+                        required
+                        className="rounded-lg"
+                      />
+                    </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="add-stock">Stock</Label>
-                  <Input
-                    id="add-stock"
-                    type="number"
-                    placeholder="100"
-                    value={addProductData.stock}
-                    onChange={(e) => setAddProductData({ ...addProductData, stock: e.target.value })}
-                    required
-                    className="rounded-lg"
-                  />
-                </div>
-              </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="add-price">Price ($)</Label>
+                      <Input
+                        id="add-price"
+                        type="number"
+                        step="0.01"
+                        placeholder="9.99"
+                        value={addProductData.price}
+                        onChange={(e) => setAddProductData({ ...addProductData, price: e.target.value })}
+                        required
+                        className="rounded-lg"
+                      />
+                    </div>
 
-              <Button
-                type="submit"
-                className="w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 transition-all duration-200"
-                disabled={addProductLoading}
-              >
-                {addProductLoading ? (
-                  <span className="flex items-center gap-2">
-                    <Spinner className="h-4 w-4" />
-                    Adding Product...
-                  </span>
+                    <div className="space-y-2">
+                      <Label htmlFor="add-stock">Stock</Label>
+                      <Input
+                        id="add-stock"
+                        type="number"
+                        placeholder="100"
+                        value={addProductData.stock}
+                        onChange={(e) => setAddProductData({ ...addProductData, stock: e.target.value })}
+                        required
+                        className="rounded-lg"
+                      />
+                    </div>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    className="w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 transition-all duration-200"
+                    disabled={addProductLoading}
+                  >
+                    {addProductLoading ? (
+                      <span className="flex items-center gap-2">
+                        <Spinner className="h-4 w-4" />
+                        Adding Product...
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-2">
+                        <Plus className="h-4 w-4" />
+                        Add Product
+                      </span>
+                    )}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+
+            {/* Product List */}
+            <Card className="shadow-xl border-emerald-100">
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span>Product Inventory</span>
+                  <Button
+                    onClick={fetchProducts}
+                    variant="outline"
+                    size="sm"
+                    disabled={productsLoading}
+                    className="flex items-center gap-2 bg-transparent"
+                  >
+                    {productsLoading ? <Spinner className="h-4 w-4" /> : "Refresh"}
+                  </Button>
+                </CardTitle>
+                <CardDescription>View and manage all products in your store</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {productsLoading ? (
+                  <div className="flex justify-center py-8">
+                    <Spinner className="h-8 w-8 text-purple-600" />
+                  </div>
+                ) : products.length === 0 ? (
+                  <p className="text-center text-gray-500 py-8">No products yet. Add your first product above!</p>
                 ) : (
-                  <span className="flex items-center gap-2">
-                    <Plus className="h-4 w-4" />
-                    Add Product
-                  </span>
+                  <div className="rounded-lg border overflow-hidden">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-purple-50">
+                          <TableHead className="font-semibold">Name</TableHead>
+                          <TableHead className="font-semibold">Category</TableHead>
+                          <TableHead className="font-semibold">Price</TableHead>
+                          <TableHead className="font-semibold">Stock</TableHead>
+                          <TableHead className="font-semibold text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {products.map((product) => (
+                          <TableRow key={product.id} className="hover:bg-gray-50 transition-colors">
+                            <TableCell className="font-medium">{product.name}</TableCell>
+                            <TableCell>{product.category}</TableCell>
+                            <TableCell className="text-emerald-600 font-semibold">
+                              ${product.price.toFixed(2)}
+                            </TableCell>
+                            <TableCell>
+                              <span
+                                className={`px-2 py-1 rounded-full text-xs ${
+                                  product.stock > 0 ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                                }`}
+                              >
+                                {product.stock}
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex justify-end gap-2">
+                                <Button
+                                  onClick={() => openEditDialog(product)}
+                                  variant="outline"
+                                  size="sm"
+                                  className="hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300"
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  onClick={() => handleDeleteProduct(product.id)}
+                                  variant="outline"
+                                  size="sm"
+                                  className="hover:bg-red-50 hover:text-red-600 hover:border-red-300"
+                                  disabled={deletingProductId === product.id}
+                                >
+                                  {deletingProductId === product.id ? (
+                                    <Spinner className="h-4 w-4" />
+                                  ) : (
+                                    <Trash2 className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
                 )}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-        {/* Product List */}
-        <Card className="shadow-xl border-emerald-100">
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span>Product Inventory</span>
-              <Button
-                onClick={fetchProducts}
-                variant="outline"
-                size="sm"
-                disabled={productsLoading}
-                className="flex items-center gap-2 bg-transparent"
-              >
-                {productsLoading ? <Spinner className="h-4 w-4" /> : "Refresh"}
-              </Button>
-            </CardTitle>
-            <CardDescription>View and manage all products in your store</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {productsLoading ? (
-              <div className="flex justify-center py-8">
-                <Spinner className="h-8 w-8 text-purple-600" />
-              </div>
-            ) : products.length === 0 ? (
-              <p className="text-center text-gray-500 py-8">No products yet. Add your first product above!</p>
-            ) : (
-              <div className="rounded-lg border overflow-hidden">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-purple-50">
-                      <TableHead className="font-semibold">Name</TableHead>
-                      <TableHead className="font-semibold">Category</TableHead>
-                      <TableHead className="font-semibold">Price</TableHead>
-                      <TableHead className="font-semibold">Stock</TableHead>
-                      <TableHead className="font-semibold text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {products.map((product) => (
-                      <TableRow key={product.id} className="hover:bg-gray-50 transition-colors">
-                        <TableCell className="font-medium">{product.name}</TableCell>
-                        <TableCell>{product.category}</TableCell>
-                        <TableCell className="text-emerald-600 font-semibold">${product.price.toFixed(2)}</TableCell>
-                        <TableCell>
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs ${
-                              product.stock > 0 ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-                            }`}
-                          >
-                            {product.stock}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button
-                              onClick={() => openEditDialog(product)}
-                              variant="outline"
-                              size="sm"
-                              className="hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300"
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              onClick={() => handleDeleteProduct(product.id)}
-                              variant="outline"
-                              size="sm"
-                              className="hover:bg-red-50 hover:text-red-600 hover:border-red-300"
-                              disabled={deletingProductId === product.id}
-                            >
-                              {deletingProductId === product.id ? (
-                                <Spinner className="h-4 w-4" />
-                              ) : (
-                                <Trash2 className="h-4 w-4" />
-                              )}
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+          <TabsContent value="inventory" className="space-y-8">
+            {/* Page Header */}
+            <div className="text-center space-y-2">
+              <h2 className="text-4xl font-bold text-gray-900 flex items-center justify-center gap-2">
+                Manage Inventory <Warehouse className="h-8 w-8 text-emerald-600" />
+              </h2>
+              <p className="text-gray-600">Track and update product quantities</p>
+            </div>
+
+            {/* Add Inventory Form */}
+            <Card className="shadow-xl border-emerald-100 max-w-3xl mx-auto">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Plus className="h-5 w-5 text-emerald-600" />
+                  Add Inventory Record
+                </CardTitle>
+                <CardDescription>Select a product and set its quantity</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleAddInventory} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="add-inv-product">Product</Label>
+                      <select
+                        id="add-inv-product"
+                        value={addInventoryData.productId}
+                        onChange={(e) => setAddInventoryData({ ...addInventoryData, productId: e.target.value })}
+                        required
+                        className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      >
+                        <option value="">Select a product</option>
+                        {products.map((product) => (
+                          <option key={product.id} value={product.id}>
+                            {product.name} (ID: {product.id})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="add-inv-quantity">Quantity</Label>
+                      <Input
+                        id="add-inv-quantity"
+                        type="number"
+                        placeholder="100"
+                        value={addInventoryData.quantity}
+                        onChange={(e) => setAddInventoryData({ ...addInventoryData, quantity: e.target.value })}
+                        required
+                        className="rounded-lg"
+                      />
+                    </div>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    className="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 transition-all duration-200"
+                    disabled={addInventoryLoading}
+                  >
+                    {addInventoryLoading ? (
+                      <span className="flex items-center gap-2">
+                        <Spinner className="h-4 w-4" />
+                        Adding Inventory...
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-2">
+                        <Plus className="h-4 w-4" />
+                        Add Inventory
+                      </span>
+                    )}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+
+            {/* Inventory List */}
+            <Card className="shadow-xl border-purple-100">
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span>Inventory Records</span>
+                  <Button
+                    onClick={fetchInventories}
+                    variant="outline"
+                    size="sm"
+                    disabled={inventoriesLoading}
+                    className="flex items-center gap-2 bg-transparent"
+                  >
+                    {inventoriesLoading ? <Spinner className="h-4 w-4" /> : "Refresh"}
+                  </Button>
+                </CardTitle>
+                <CardDescription>View and manage all inventory records</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {inventoriesLoading ? (
+                  <div className="flex justify-center py-8">
+                    <Spinner className="h-8 w-8 text-emerald-600" />
+                  </div>
+                ) : inventories.length === 0 ? (
+                  <p className="text-center text-gray-500 py-8">
+                    No inventory records yet. Add your first record above!
+                  </p>
+                ) : (
+                  <div className="rounded-lg border overflow-hidden">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-emerald-50">
+                          <TableHead className="font-semibold">ID</TableHead>
+                          <TableHead className="font-semibold">Product ID</TableHead>
+                          <TableHead className="font-semibold">Product Name</TableHead>
+                          <TableHead className="font-semibold">Quantity</TableHead>
+                          <TableHead className="font-semibold text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {inventories.map((inventory) => (
+                          <TableRow key={inventory.id} className="hover:bg-gray-50 transition-colors">
+                            <TableCell className="font-medium">{inventory.id}</TableCell>
+                            <TableCell>{inventory.productId}</TableCell>
+                            <TableCell>{inventory.productName}</TableCell>
+                            <TableCell>
+                              <span className="px-2 py-1 rounded-full text-xs bg-emerald-100 text-emerald-700 font-semibold">
+                                {inventory.quantity}
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex justify-end gap-2">
+                                <Button
+                                  onClick={() => openEditInventoryDialog(inventory)}
+                                  variant="outline"
+                                  size="sm"
+                                  className="hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300"
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  onClick={() => handleDeleteInventory(inventory.id)}
+                                  variant="outline"
+                                  size="sm"
+                                  className="hover:bg-red-50 hover:text-red-600 hover:border-red-300"
+                                  disabled={deletingInventoryId === inventory.id}
+                                >
+                                  {deletingInventoryId === inventory.id ? (
+                                    <Spinner className="h-4 w-4" />
+                                  ) : (
+                                    <Trash2 className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </main>
 
       {/* Edit Product Dialog */}
-      <Dialog open={!!editingProduct} onOpenChange={(open: any) => !open && setEditingProduct(null)}>
+      <Dialog open={!!editingProduct} onOpenChange={(open) => !open && setEditingProduct(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Edit Product</DialogTitle>
@@ -487,6 +797,53 @@ export default function AdminDashboard() {
                 disabled={editProductLoading}
               >
                 {editProductLoading ? (
+                  <span className="flex items-center gap-2">
+                    <Spinner className="h-4 w-4" />
+                    Saving...
+                  </span>
+                ) : (
+                  "Save Changes"
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!editingInventory} onOpenChange={(open) => !open && setEditingInventory(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Inventory</DialogTitle>
+            <DialogDescription>Update the inventory quantity below</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleEditInventory} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-inv-quantity">Quantity</Label>
+              <Input
+                id="edit-inv-quantity"
+                type="number"
+                value={editInventoryData.quantity}
+                onChange={(e) => setEditInventoryData({ ...editInventoryData, quantity: e.target.value })}
+                required
+                className="rounded-lg"
+              />
+            </div>
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setEditingInventory(null)}
+                disabled={editInventoryLoading}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                className="bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800"
+                disabled={editInventoryLoading}
+              >
+                {editInventoryLoading ? (
                   <span className="flex items-center gap-2">
                     <Spinner className="h-4 w-4" />
                     Saving...
