@@ -24,6 +24,7 @@ export default function DashboardPage() {
   const [password, setPassword] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
+  // Admin state
   const [productData, setProductData] = useState({
     name: "",
     price: "",
@@ -33,16 +34,19 @@ export default function DashboardPage() {
   const [addProductLoading, setAddProductLoading] = useState(false)
   const [addProductMessage, setAddProductMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
 
+  // Customer state
   const [catalogue, setCatalogue] = useState<Product[]>([])
   const [catalogueLoading, setCatalogueLoading] = useState(false)
   const [catalogueError, setCatalogueError] = useState<string | null>(null)
 
   useEffect(() => {
+    // Check authentication on mount
     const storedEmail = localStorage.getItem("email")
     const storedPassword = localStorage.getItem("password")
     const storedRole = localStorage.getItem("role")
 
     if (!storedEmail || !storedPassword || !storedRole) {
+      // Not authenticated, redirect to auth
       router.push("/auth")
       return
     }
@@ -57,6 +61,7 @@ export default function DashboardPage() {
     setRole(storedRole)
     setLoading(false)
 
+    // If customer, automatically fetch catalogue
     if (storedRole === "Customer") {
       fetchCatalogue()
     }
@@ -99,7 +104,7 @@ export default function DashboardPage() {
     setCatalogueError(null)
 
     try {
-      const response = await fetch("http://localhost:5074/api/Catalogue")
+      const response = await fetch("http://localhost:5074/api/Catalogue/list")
 
       if (response.ok) {
         const data = await response.json()
@@ -124,6 +129,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-emerald-50">
+      {/* Header */}
       <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50 shadow-sm">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-emerald-500 bg-clip-text text-transparent">
@@ -141,7 +147,9 @@ export default function DashboardPage() {
         </div>
       </header>
 
+      {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
+        {/* Customer Dashboard */}
         <div className="space-y-6">
           <div className="text-center space-y-2">
             <h2 className="text-3xl font-bold text-gray-900">Welcome back, {email}</h2>
@@ -181,13 +189,6 @@ export default function DashboardPage() {
                   <CardContent className="space-y-2">
                     <div className="flex justify-between items-center">
                       <span className="text-2xl font-bold text-emerald-600">${product.price.toFixed(2)}</span>
-                      <span
-                        className={`text-sm px-2 py-1 rounded-full ${
-                          product.stock > 0 ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-                        }`}
-                      >
-                        {product.stock > 0 ? `${product.stock} in stock` : "Out of stock"}
-                      </span>
                     </div>
                   </CardContent>
                 </Card>
@@ -199,6 +200,7 @@ export default function DashboardPage() {
         </div>
       </main>
 
+      {/* Footer */}
       <footer className="mt-12 py-6 text-center text-sm text-gray-500 border-t">
         © 2025 Your Local Shop. All rights reserved.
       </footer>
