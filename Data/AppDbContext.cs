@@ -9,17 +9,56 @@ namespace Assignment_3_SWE30003.Data
         public DbSet<Account> Accounts { get; set; }
         public DbSet<Product> Products { get; set; }
         public DbSet<Inventory> Inventories { get; set; }
+        public DbSet<ShoppingCart> ShoppingCarts { get; set; }
+        public DbSet<CartItem> CartItems { get; set; }
+        public DbSet<Order> Orders { get; set; }
+        public DbSet<OrderLine> OrderLines { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            // Product configuration
             modelBuilder.Entity<Product>()
                 .Property(p => p.IsInCatalogue)
                 .HasDefaultValue(false);
+
+            // Inventory configuration
             modelBuilder.Entity<Inventory>()
-                .HasOne(i => i.Product)        
-                .WithOne(p => p.Inventory)    
+                .HasOne(i => i.Product)
+                .WithOne(p => p.Inventory)
                 .HasForeignKey<Inventory>(i => i.ProductId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // ShoppingCart configuration
+            modelBuilder.Entity<ShoppingCart>()
+                .HasIndex(sc => sc.CustomerId)
+                .IsUnique();
+
+            modelBuilder.Entity<ShoppingCart>()
+                .HasMany(sc => sc.Items)
+                .WithOne()
+                .HasForeignKey(ci => ci.ShoppingCartId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // CartItem constraints
+            modelBuilder.Entity<CartItem>()
+                .Property(ci => ci.Quantity)
+                .HasAnnotation("MinValue", 1);
+
+            modelBuilder.Entity<CartItem>()
+                .Property(ci => ci.UnitPrice)
+                .HasAnnotation("MinValue", 0);
+
+            // Order configuration
+            modelBuilder.Entity<Order>()
+                .HasMany(o => o.Lines)
+                .WithOne()
+                .HasForeignKey(ol => ol.OrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Order>()
+                .Property(o => o.Status)
+                .HasConversion<string>();
         }
     }
 }
