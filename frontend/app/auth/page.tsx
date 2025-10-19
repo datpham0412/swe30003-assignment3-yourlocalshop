@@ -43,7 +43,11 @@ export default function AuthPage() {
         setSignInMessage({ type: "success", text: "Successfully signed in!" })
 
         setTimeout(() => {
-          router.push("/dashboard")
+          if (role === "Admin") {
+            router.push("/dashboard/admin")
+          } else {
+            router.push("/catalogue")
+          }
         }, 500)
       } else {
         const errorText = await response.text()

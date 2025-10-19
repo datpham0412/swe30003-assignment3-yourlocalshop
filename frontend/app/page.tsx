@@ -6,6 +6,7 @@ import { ShoppingBag, Package, CreditCard, Truck, BarChart3 } from "lucide-react
 export default function HomePage() {
   return (
     <div className="min-h-screen flex flex-col">
+      {/* Navigation */}
       <nav className="border-b border-purple-100 bg-white/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
@@ -19,6 +20,9 @@ export default function HomePage() {
               <Link href="/" className="text-gray-700 hover:text-purple-600 transition-colors">
                 Home
               </Link>
+              <Link href="/catalogue" className="text-gray-700 hover:text-purple-600 transition-colors">
+                Catalogue
+              </Link>
               <Link href="/auth">
                 <Button variant="outline" className="border-purple-200 hover:bg-purple-50 bg-transparent">
                   Login
@@ -29,6 +33,7 @@ export default function HomePage() {
         </div>
       </nav>
 
+      {/* Hero Section */}
       <section className="flex-1 flex items-center justify-center px-4 py-20 bg-gradient-to-br from-purple-50 via-white to-emerald-50">
         <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center">
           <div className="space-y-6 text-center md:text-left">
@@ -51,23 +56,30 @@ export default function HomePage() {
                   Get Started
                 </Button>
               </Link>
-              <Button
-                size="lg"
-                variant="outline"
-                className="w-full sm:w-auto border-emerald-200 hover:bg-emerald-50 transition-all duration-200 bg-transparent"
-              >
-                Browse Catalogue
-              </Button>
+              <Link href="/catalogue">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="w-full sm:w-auto border-emerald-200 hover:bg-emerald-50 transition-all duration-200 bg-transparent"
+                >
+                  Browse Catalogue
+                </Button>
+              </Link>
             </div>
           </div>
           <div className="flex justify-center">
             <div className="relative w-full max-w-md aspect-square">
-              <img src="/storefront.png" alt="Your Local Shop" className="rounded-2xl shadow-2xl" />
-            </div>  
+              <img
+                src="/storefront.png"
+                alt="Your Local Shop"
+                className="rounded-2xl shadow-2xl"
+              />
+            </div>
           </div>
         </div>
       </section>
 
+      {/* About Section */}
       <section className="py-20 px-4 bg-white">
         <div className="max-w-4xl mx-auto text-center space-y-6">
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">About Your Local Shop</h2>
@@ -79,6 +91,7 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Features Section */}
       <section className="py-20 px-4 bg-gradient-to-br from-purple-50 to-emerald-50">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-3xl sm:text-4xl font-bold text-center text-gray-900 mb-12">What We Offer</h2>
@@ -158,6 +171,7 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Footer */}
       <footer className="py-8 px-4 bg-white border-t border-purple-100">
         <div className="max-w-7xl mx-auto text-center">
           <p className="text-gray-600">© 2025 Your Local Shop. All rights reserved.</p>
