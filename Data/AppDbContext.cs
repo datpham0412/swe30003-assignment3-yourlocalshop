@@ -13,6 +13,8 @@ namespace Assignment_3_SWE30003.Data
         public DbSet<CartItem> CartItems { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderLine> OrderLines { get; set; }
+        public DbSet<Payment> Payments { get; set; }
+        public DbSet<Invoice> Invoices { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -59,6 +61,24 @@ namespace Assignment_3_SWE30003.Data
             modelBuilder.Entity<Order>()
                 .Property(o => o.Status)
                 .HasConversion<string>();
+
+            // Payment configuration
+            modelBuilder.Entity<Payment>()
+                .HasOne(p => p.Order)
+                .WithOne()
+                .HasForeignKey<Payment>(p => p.OrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Payment>()
+                .Property(p => p.Status)
+                .HasConversion<string>();
+
+            // Invoice configuration
+            modelBuilder.Entity<Invoice>()
+                .HasOne(i => i.Order)
+                .WithOne()
+                .HasForeignKey<Invoice>(i => i.OrderId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }
