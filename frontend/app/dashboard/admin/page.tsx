@@ -1,6 +1,8 @@
 "use client"
 
 import type React from "react"
+import Link from "next/link"
+import { CreditCard, FileText } from "lucide-react"
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
@@ -295,15 +297,31 @@ export default function AdminDashboard() {
             <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-emerald-500 bg-clip-text text-transparent">
               Your Local Shop — Admin Dashboard
             </h1>
-            <Button
-              onClick={handleLogout}
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-2 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-colors bg-transparent"
-            >
-              <LogOut className="h-4 w-4" />
-              Logout
-            </Button>
+            <nav className="flex items-center gap-2">
+              <Link href="/payments">
+                <Button variant="ghost" size="sm" className="hover:bg-purple-50">
+                  <CreditCard className="h-4 w-4 mr-2" />
+                  Payments
+                </Button>
+              </Link>
+
+              <Link href="/invoices">
+                <Button variant="ghost" size="sm" className="hover:bg-purple-50">
+                  <FileText className="h-4 w-4 mr-2" />
+                  Invoices
+                </Button>
+              </Link>
+
+              <Button
+                onClick={handleLogout}
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-colors ml-2 bg-transparent"
+              >
+                <LogOut className="h-4 w-4" />
+                Logout
+              </Button>
+            </nav>
           </div>
         </header>
 

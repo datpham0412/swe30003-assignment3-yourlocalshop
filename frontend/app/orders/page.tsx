@@ -6,8 +6,9 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
 import { Badge } from "@/components/ui/badge"
-import { LogOut, Package, ArrowLeft } from "lucide-react"
+import { Package, CreditCard, FileText } from "lucide-react"
 import { toast } from "sonner"
+import { CustomerNav } from "@/components/customer/CustomerNav"
 
 interface Order {
   orderId: number
@@ -75,22 +76,17 @@ export default function OrdersPage() {
         const data = await response.json()
         setOrders(data)
       } else {
-        toast.info("Error", {
-            description: "Failed to load orders"
+        toast.error("Failed to load orders", {
+          description: "Please try again later.",
         })
       }
     } catch (error) {
-      toast.info("Error", {
-        description: "Network error"
+      toast.error("Network error", {
+        description: "Unable to connect to the server.",
       })
     } finally {
       setLoading(false)
     }
-  }
-
-  const handleLogout = () => {
-    localStorage.clear()
-    router.push("/auth")
   }
 
   if (loading) {
@@ -103,37 +99,10 @@ export default function OrdersPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-emerald-50">
-      {/* Header */}
-      <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50 shadow-sm">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-emerald-500 bg-clip-text text-transparent">
-            Your Local Shop
-          </h1>
-          <Button
-            onClick={handleLogout}
-            variant="outline"
-            size="sm"
-            className="flex items-center gap-2 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-colors bg-transparent"
-          >
-            <LogOut className="h-4 w-4" />
-            Logout
-          </Button>
-        </div>
-      </header>
+      <CustomerNav />
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8 max-w-6xl">
-        <div className="mb-6">
-          <Button
-            onClick={() => router.push("/dashboard")}
-            variant="ghost"
-            className="flex items-center gap-2 text-purple-600 hover:text-purple-700"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Dashboard
-          </Button>
-        </div>
-
         <div className="flex items-center gap-3 mb-6">
           <Package className="h-8 w-8 text-purple-600" />
           <h2 className="text-3xl font-bold text-gray-900">Order History</h2>
@@ -155,11 +124,7 @@ export default function OrdersPage() {
         ) : (
           <div className="space-y-4">
             {orders.map((order) => (
-              <Card
-                key={order.orderId}
-                className="shadow-md hover:shadow-lg transition-shadow cursor-pointer"
-                onClick={() => router.push(`/orders/${order.orderId}`)}
-              >
+              <Card key={order.orderId} className="shadow-md hover:shadow-lg transition-shadow">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between gap-4 flex-wrap">
                     <div className="flex-1 min-w-[200px]">
@@ -173,11 +138,43 @@ export default function OrdersPage() {
                       </p>
                     </div>
 
-                    <div className="text-right">
-                      <p className="text-2xl font-bold text-emerald-600">${order.total.toFixed(2)}</p>
-                      <Button variant="link" className="text-purple-600 hover:text-purple-700 p-0 h-auto">
-                        View Details →
-                      </Button>
+                    <div className="flex items-center gap-3">
+                      <div className="text-right mr-4">
+                        <p className="text-2xl font-bold text-emerald-600">${order.total.toFixed(2)}</p>
+                      </div>
+
+                      <div className="flex flex-col gap-2">
+                        {order.status === "PendingPayment" && (
+                          <Button
+                            onClick={() => router.push(`/payments/process/${order.orderId}`)}
+                            className="bg-gradient-to-r from-purple-600 to-emerald-500 hover:from-purple-700 hover:to-emerald-600"
+                            size="sm"
+                          >
+                            <CreditCard className="h-4 w-4 mr-2" />
+                            Make Payment
+                          </Button>
+                        )}
+
+                        {order.status === "Paid" && (
+                          <Button
+                            onClick={() => router.push(`/invoices/${order.orderId}`)}
+                            className="bg-gradient-to-r from-blue-600 to-green-500 hover:from-blue-700 hover:to-green-600"
+                            size="sm"
+                          >
+                            <FileText className="h-4 w-4 mr-2" />
+                            View Invoice
+                          </Button>
+                        )}
+
+                        <Button
+                          onClick={() => router.push(`/orders/${order.orderId}`)}
+                          variant="outline"
+                          size="sm"
+                          className="hover:bg-purple-50"
+                        >
+                          View Details →
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
