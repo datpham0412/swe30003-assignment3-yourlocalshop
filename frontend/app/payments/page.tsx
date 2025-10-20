@@ -181,7 +181,7 @@ export default function PaymentsPage() {
                 </Button>
               </Link>
 
-              <Link href="/orders">
+              <Link href="/orders/admin">
                 <Button variant="ghost" size="sm" className="hover:bg-purple-50">
                   <Package className="h-4 w-4 mr-2" />
                   Orders

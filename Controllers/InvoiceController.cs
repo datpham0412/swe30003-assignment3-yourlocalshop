@@ -44,6 +44,10 @@ namespace Assignment_3_SWE30003.Controllers
                     return Unauthorized("You are not authorized to view this invoice.");
                 }
 
+                // Get payment method
+                var payment = await _context.Payments
+                    .FirstOrDefaultAsync(p => p.OrderId == orderId);
+
                 return Ok(new
                 {
                     invoiceId = invoice.Id,
@@ -51,23 +55,18 @@ namespace Assignment_3_SWE30003.Controllers
                     orderId = invoice.OrderId,
                     amount = invoice.Amount,
                     issueDate = invoice.IssueDate,
-                    orderDetails = new
+                    paymentMethod = payment?.Method ?? "Unknown",
+                    lines = invoice.Order.Lines.Select(l => new
                     {
-                        customerId = invoice.Order.CustomerId,
-                        orderDate = invoice.Order.OrderDate,
-                        status = invoice.Order.Status.ToString(),
-                        lines = invoice.Order.Lines.Select(l => new
-                        {
-                            productId = l.ProductId,
-                            productName = l.ProductName,
-                            unitPrice = l.UnitPrice,
-                            quantity = l.Quantity,
-                            lineTotal = l.LineTotal
-                        }).ToList(),
-                        subtotal = invoice.Order.Subtotal,
-                        tax = invoice.Order.Tax,
-                        total = invoice.Order.Total
-                    }
+                        productId = l.ProductId,
+                        name = l.ProductName,
+                        unitPrice = l.UnitPrice,
+                        quantity = l.Quantity,
+                        lineTotal = l.LineTotal
+                    }).ToList(),
+                    subtotal = invoice.Order.Subtotal,
+                    tax = invoice.Order.Tax,
+                    total = invoice.Order.Total
                 });
             }
             catch (Exception ex)

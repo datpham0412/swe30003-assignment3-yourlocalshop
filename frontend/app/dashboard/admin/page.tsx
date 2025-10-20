@@ -2,7 +2,7 @@
 
 import type React from "react"
 import Link from "next/link"
-import { CreditCard, FileText, Truck, BarChart3 } from "lucide-react"
+import { CreditCard, FileText, Truck, BarChart3, Package } from "lucide-react"
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
@@ -302,6 +302,13 @@ export default function AdminDashboard() {
                 <Button variant="ghost" size="sm" className="hover:bg-purple-50">
                   <CreditCard className="h-4 w-4 mr-2" />
                   Payments
+                </Button>
+              </Link>
+
+              <Link href="/orders/admin">
+                <Button variant="ghost" size="sm" className="hover:bg-purple-50">
+                  <Package className="h-4 w-4 mr-2" />
+                  Orders
                 </Button>
               </Link>
 

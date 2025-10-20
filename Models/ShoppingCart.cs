@@ -90,7 +90,14 @@ namespace Assignment_3_SWE30003.Models
 
         public void Clear()
         {
-            Items.Clear();
+            // Remove all items from the collection
+            // EF Core will track these as deleted
+            var itemsToRemove = Items.ToList();
+            foreach (var item in itemsToRemove)
+            {
+                Items.Remove(item);
+            }
+
             Subtotal = 0;
             Tax = 0;
             Total = 0;

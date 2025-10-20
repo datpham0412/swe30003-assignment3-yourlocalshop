@@ -1,4 +1,5 @@
 using Assignment_3_SWE30003.Data;
+using Assignment_3_SWE30003.DTOs;
 using Assignment_3_SWE30003.DTOs.Order;
 using Assignment_3_SWE30003.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -50,6 +51,18 @@ namespace Assignment_3_SWE30003.Controllers
 
                 _context.Orders.Add(order);
 
+                // Clear the cart after creating the order
+                // Get all cart items before clearing
+                var cartItemsToRemove = cart.Items.ToList();
+
+                // Clear the cart (this updates cart totals and clears Items collection)
+                cart.Clear();
+
+                // Explicitly mark cart items for deletion to ensure EF Core tracks them
+                foreach (var cartItem in cartItemsToRemove)
+                {
+                    _context.CartItems.Remove(cartItem);
+                }
 
                 await _context.SaveChangesAsync();
 
@@ -76,6 +89,7 @@ namespace Assignment_3_SWE30003.Controllers
 
                 var orders = await _context.Orders
                     .Include(o => o.Lines)
+                    .Include(o => o.Shipment)
                     .Where(o => o.CustomerId == customer.Id)
                     .OrderByDescending(o => o.OrderDate)
                     .ToListAsync();
@@ -105,6 +119,7 @@ namespace Assignment_3_SWE30003.Controllers
 
                 var order = await _context.Orders
                     .Include(o => o.Lines)
+                    .Include(o => o.Shipment)
                     .FirstOrDefaultAsync(o => o.Id == id);
 
                 if (order == null)
@@ -140,6 +155,7 @@ namespace Assignment_3_SWE30003.Controllers
 
                 var orders = await _context.Orders
                     .Include(o => o.Lines)
+                    .Include(o => o.Shipment)
                     .OrderByDescending(o => o.OrderDate)
                     .ToListAsync();
 
@@ -168,6 +184,7 @@ namespace Assignment_3_SWE30003.Controllers
 
                 var order = await _context.Orders
                     .Include(o => o.Lines)
+                    .Include(o => o.Shipment)
                     .FirstOrDefaultAsync(o => o.Id == id);
 
                 if (order == null)
@@ -240,7 +257,16 @@ namespace Assignment_3_SWE30003.Controllers
                 ShipmentAddress = order.ShipmentAddress,
                 ContactName = order.ContactName,
                 ContactPhone = order.ContactPhone,
-                Note = order.Note
+                Note = order.Note,
+                Shipment = order.Shipment != null ? new ShipmentDto
+                {
+                    ShipmentId = order.Shipment.Id,
+                    TrackingNumber = order.Shipment.TrackingNumber,
+                    Status = order.Shipment.Status,
+                    Address = order.Shipment.Address,
+                    ContactName = order.Shipment.ContactName,
+                    DeliveryDate = order.Shipment.DeliveryDate
+                } : null
             };
         }
     }

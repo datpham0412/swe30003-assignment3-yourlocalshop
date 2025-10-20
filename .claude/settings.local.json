@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pkill -f \"dotnet run\")",
+      "Bash(dotnet run)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

@@ -82,17 +82,16 @@ export default function CheckoutPage() {
         }
         setCart(data)
       } else {
-       toast.error("Failed to load cart", {
+        toast.error("Failed to load cart", {
           description: "Please try again later.",
         })
         router.push("/cart")
       }
     } catch (error) {
-            toast.error("Network error", {
+      toast.error("Network error", {
         description: "Unable to connect to the server.",
       })
       router.push("/cart")
-
     } finally {
       setLoading(false)
     }
@@ -127,7 +126,7 @@ export default function CheckoutPage() {
     e.preventDefault()
 
     if (!validateForm()) {
-       toast.warning("Validation error", {
+      toast.error("Validation Error", {
         description: "Please fill in all required fields correctly.",
       })
       return
@@ -146,19 +145,36 @@ export default function CheckoutPage() {
       )
 
       if (response.ok) {
+        const data = await response.json()
+        console.log("Order created successfully:", data)
+
+        if (!data.orderId) {
+          console.error("No orderId in response:", data)
+          toast.error("Order created but missing ID", {
+            description: "Please check your orders page.",
+          })
+          setTimeout(() => {
+            router.push("/orders")
+          }, 1500)
+          return
+        }
+
         toast.success("Order placed successfully!", {
-          description: "Your order has been created.",
+          description: "Redirecting to payment...",
         })
-        router.push("/orders")
+        setTimeout(() => {
+          router.push(`/payments/process/${data.orderId}`)
+        }, 1000)
       } else {
         const errorText = await response.text()
+        console.error("Order creation failed:", errorText)
         toast.error("Failed to create order", {
-          description: errorText || "Something went wrong.",
+          description: errorText || "Please try again later.",
         })
       }
     } catch (error) {
-     toast.error("Network error", {
-        description: "Please check your connection.",
+      toast.error("Network error", {
+        description: "Unable to connect to the server.",
       })
     } finally {
       setSubmitting(false)

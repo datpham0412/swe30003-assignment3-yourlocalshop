@@ -15,5 +15,6 @@ namespace Assignment_3_SWE30003.DTOs.Order
         public string? ContactName { get; set; }
         public string? ContactPhone { get; set; }
         public string? Note { get; set; }
+        public ShipmentDto? Shipment { get; set; }
     }
 }

@@ -6,8 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
 import { Badge } from "@/components/ui/badge"
-import { LogOut, Package, ArrowLeft, MapPin, Phone, User, FileText } from "lucide-react"
+import { LogOut, Package, ArrowLeft, MapPin, Phone, User, FileText, Home, CreditCard, Truck, BarChart3, LayoutDashboard } from "lucide-react"
 import { toast } from "sonner"
+import Link from "next/link"
  
 interface OrderLine {
   productId: number
@@ -15,6 +16,15 @@ interface OrderLine {
   unitPrice: number
   quantity: number
   lineTotal: number
+}
+
+interface Shipment {
+  shipmentId: number
+  trackingNumber: string
+  status: string
+  address: string
+  contactName: string
+  deliveryDate: string | null
 }
 
 interface Order {
@@ -29,6 +39,7 @@ interface Order {
   contactName: string
   contactPhone: string
   note: string
+  shipment: Shipment | null
 }
 
 const getStatusColor = (status: string) => {
@@ -41,6 +52,16 @@ const getStatusColor = (status: string) => {
     Delivered: "bg-green-100 text-green-800 border-green-300",
     Failed: "bg-red-100 text-red-800 border-red-300",
     Cancelled: "bg-gray-100 text-gray-800 border-gray-300",
+  }
+  return colors[status] || "bg-gray-100 text-gray-800 border-gray-300"
+}
+
+const getShipmentStatusColor = (status: string) => {
+  const colors: Record<string, string> = {
+    Pending: "bg-gray-100 text-gray-800 border-gray-300",
+    Dispatched: "bg-blue-100 text-blue-800 border-blue-300",
+    InTransit: "bg-purple-100 text-purple-800 border-purple-300",
+    Delivered: "bg-green-100 text-green-800 border-green-300",
   }
   return colors[status] || "bg-gray-100 text-gray-800 border-gray-300"
 }
@@ -61,6 +82,7 @@ export default function OrderDetailPage() {
   const params = useParams()
   const [email, setEmail] = useState<string | null>(null)
   const [password, setPassword] = useState<string | null>(null)
+  const [role, setRole] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [order, setOrder] = useState<Order | null>(null)
 
@@ -69,13 +91,19 @@ export default function OrderDetailPage() {
     const storedPassword = localStorage.getItem("password")
     const storedRole = localStorage.getItem("role")
 
-    if (!storedEmail || !storedPassword || storedRole !== "Customer") {
+    if (!storedEmail || !storedPassword || !storedRole) {
+      router.push("/auth")
+      return
+    }
+
+    if (storedRole !== "Customer" && storedRole !== "Admin") {
       router.push("/auth")
       return
     }
 
     setEmail(storedEmail)
     setPassword(storedPassword)
+    setRole(storedRole)
     fetchOrder(storedEmail, storedPassword, params.id as string)
   }, [router, params.id])
 
@@ -124,23 +152,88 @@ export default function OrderDetailPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-emerald-50">
-      {/* Header */}
-      <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50 shadow-sm">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-emerald-500 bg-clip-text text-transparent">
-            Your Local Shop
-          </h1>
-          <Button
-            onClick={handleLogout}
-            variant="outline"
-            size="sm"
-            className="flex items-center gap-2 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-colors bg-transparent"
-          >
-            <LogOut className="h-4 w-4" />
-            Logout
-          </Button>
-        </div>
-      </header>
+      {/* Header - Different for Admin vs Customer */}
+      {role === "Admin" ? (
+        <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50 shadow-sm">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex items-center justify-between">
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-emerald-500 bg-clip-text text-transparent">
+                Your Local Shop — Admin
+              </h1>
+              <nav className="flex items-center gap-2">
+                <Link href="/">
+                  <Button variant="ghost" size="sm" className="hover:bg-purple-50">
+                    <Home className="h-4 w-4 mr-2" />
+                    Home
+                  </Button>
+                </Link>
+                <Link href="/orders">
+                  <Button variant="default" size="sm" className="bg-gradient-to-r from-purple-600 to-emerald-500">
+                    <Package className="h-4 w-4 mr-2" />
+                    Orders
+                  </Button>
+                </Link>
+                <Link href="/payments">
+                  <Button variant="ghost" size="sm" className="hover:bg-purple-50">
+                    <CreditCard className="h-4 w-4 mr-2" />
+                    Payments
+                  </Button>
+                </Link>
+                <Link href="/invoices">
+                  <Button variant="ghost" size="sm" className="hover:bg-purple-50">
+                    <FileText className="h-4 w-4 mr-2" />
+                    Invoices
+                  </Button>
+                </Link>
+                <Link href="/shipments">
+                  <Button variant="ghost" size="sm" className="hover:bg-purple-50">
+                    <Truck className="h-4 w-4 mr-2" />
+                    Shipments
+                  </Button>
+                </Link>
+                <Link href="/reports">
+                  <Button variant="ghost" size="sm" className="hover:bg-purple-50">
+                    <BarChart3 className="h-4 w-4 mr-2" />
+                    Reports
+                  </Button>
+                </Link>
+                <Link href="/dashboard/admin">
+                  <Button variant="ghost" size="sm" className="hover:bg-purple-50">
+                    <LayoutDashboard className="h-4 w-4 mr-2" />
+                    Admin
+                  </Button>
+                </Link>
+                <Button
+                  onClick={handleLogout}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-colors ml-2 bg-transparent"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Logout
+                </Button>
+              </nav>
+            </div>
+          </div>
+        </header>
+      ) : (
+        <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50 shadow-sm">
+          <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-emerald-500 bg-clip-text text-transparent">
+              Your Local Shop
+            </h1>
+            <Button
+              onClick={handleLogout}
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-colors bg-transparent"
+            >
+              <LogOut className="h-4 w-4" />
+              Logout
+            </Button>
+          </div>
+        </header>
+      )}
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8 max-w-6xl">
@@ -254,6 +347,45 @@ export default function OrderDetailPage() {
                   )}
                 </CardContent>
               </Card>
+
+              {/* Shipment Tracking */}
+              {order.shipment && (
+                <Card className="shadow-lg">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="flex items-center gap-2">
+                        <Truck className="h-5 w-5 text-purple-600" />
+                        Shipment Tracking
+                      </CardTitle>
+                      <Badge className={getShipmentStatusColor(order.shipment.status)}>
+                        {order.shipment.status}
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <p className="text-sm text-gray-500">Tracking Number</p>
+                      <p className="font-bold text-lg text-purple-600">{order.shipment.trackingNumber}</p>
+                    </div>
+
+                    {order.shipment.deliveryDate && (
+                      <div>
+                        <p className="text-sm text-gray-500">Delivery Date</p>
+                        <p className="font-medium text-gray-900">{formatDate(order.shipment.deliveryDate)}</p>
+                      </div>
+                    )}
+
+                    <div className="pt-3 border-t">
+                      <p className="text-xs text-gray-500">
+                        {order.shipment.status === "Pending" && "Your order is being prepared for shipment."}
+                        {order.shipment.status === "Dispatched" && "Your order has been dispatched and is on its way!"}
+                        {order.shipment.status === "InTransit" && "Your order is in transit to the delivery address."}
+                        {order.shipment.status === "Delivered" && "Your order has been successfully delivered!"}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </div>
         </div>
