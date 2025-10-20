@@ -25,6 +25,8 @@ namespace Assignment_3_SWE30003.Models
 
         public ICollection<OrderLine> Lines { get; set; } = new List<OrderLine>();
 
+        public Shipment? Shipment { get; set; }
+
         public string? ShipmentAddress { get; set; }
         public string? ContactName { get; set; }
         public string? ContactPhone { get; set; }

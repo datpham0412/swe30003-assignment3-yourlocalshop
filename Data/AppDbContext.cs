@@ -15,6 +15,8 @@ namespace Assignment_3_SWE30003.Data
         public DbSet<OrderLine> OrderLines { get; set; }
         public DbSet<Payment> Payments { get; set; }
         public DbSet<Invoice> Invoices { get; set; }
+        public DbSet<Shipment> Shipments { get; set; }
+        public DbSet<SalesReport> SalesReports { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -72,6 +74,20 @@ namespace Assignment_3_SWE30003.Data
                 .WithOne()
                 .HasForeignKey<Invoice>(i => i.OrderId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Shipment>()
+                .HasOne(s => s.Order)
+                .WithOne(o => o.Shipment)
+                .HasForeignKey<Shipment>(s => s.OrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Shipment>()
+                .Property(s => s.Status)
+                .HasConversion<string>();
+
+            modelBuilder.Entity<SalesReport>()
+                .Property(sr => sr.Period)
+                .HasConversion<string>();
         }
     }
 }

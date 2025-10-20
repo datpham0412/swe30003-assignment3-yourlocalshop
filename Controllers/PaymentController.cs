@@ -86,6 +86,16 @@ namespace Assignment_3_SWE30003.Controllers
                 var invoice = Invoice.FromOrder(order);
                 _context.Invoices.Add(invoice);
 
+                // Create a shipment automatically after successful payment
+                var shipment = new Shipment
+                {
+                    OrderId = order.Id,
+                    Address = order.ShipmentAddress ?? "Default Address",
+                    ContactName = order.ContactName ?? "Customer",
+                    TrackingNumber = $"TRK-{Guid.NewGuid().ToString().Substring(0, 8)}"
+                };
+                _context.Shipments.Add(shipment);
+
                 await _context.SaveChangesAsync();
 
                 return Ok(new

@@ -143,7 +143,6 @@ namespace Assignment_3_SWE30003.Controllers
                     return BadRequest("Invoice already exists for this order.");
                 }
 
-                // Generate invoice
                 var invoice = Invoice.FromOrder(order);
                 _context.Invoices.Add(invoice);
                 await _context.SaveChangesAsync();
