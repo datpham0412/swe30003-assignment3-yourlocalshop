@@ -8,9 +8,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Spinner } from "@/components/ui/spinner"
-import { LogOut, Search, CreditCard, Home, Package, FileText, LayoutDashboard } from "lucide-react"
-import { toast } from "sonner"
 import Link from "next/link"
+import { LogOut, Search, CreditCard, Home, Package, FileText, LayoutDashboard, Truck, BarChart3 } from "lucide-react"
+import { toast } from "sonner"
 
 interface Payment {
   paymentId: number
@@ -199,6 +199,20 @@ export default function PaymentsPage() {
                 <Button variant="ghost" size="sm" className="hover:bg-purple-50">
                   <FileText className="h-4 w-4 mr-2" />
                   Invoices
+                </Button>
+              </Link>
+
+              <Link href="/shipments">
+                <Button variant="ghost" size="sm" className="hover:bg-purple-50">
+                  <Truck className="h-4 w-4 mr-2" />
+                  Shipments
+                </Button>
+              </Link>
+
+              <Link href="/reports">
+                <Button variant="ghost" size="sm" className="hover:bg-purple-50">
+                  <BarChart3 className="h-4 w-4 mr-2" />
+                  Reports
                 </Button>
               </Link>
 
