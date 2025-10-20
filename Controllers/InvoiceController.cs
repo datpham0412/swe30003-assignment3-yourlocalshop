@@ -21,7 +21,6 @@ namespace Assignment_3_SWE30003.Controllers
         {
             try
             {
-                // Authenticate user (customer or admin)
                 var user = await _context.Accounts
                     .FirstOrDefaultAsync(a => a.Email == email && a.Password == password);
 
@@ -30,7 +29,6 @@ namespace Assignment_3_SWE30003.Controllers
                     return Unauthorized("Invalid credentials.");
                 }
 
-                // Get invoice with order
                 var invoice = await _context.Invoices
                     .Include(i => i.Order)
                     .ThenInclude(o => o.Lines)
@@ -41,7 +39,6 @@ namespace Assignment_3_SWE30003.Controllers
                     return NotFound("Invoice not found for this order.");
                 }
 
-                // Authorization: customer can only see their own invoices, admin can see all
                 if (user.Role == "Customer" && invoice.Order.CustomerId != user.Id)
                 {
                     return Unauthorized("You are not authorized to view this invoice.");
@@ -84,7 +81,6 @@ namespace Assignment_3_SWE30003.Controllers
         {
             try
             {
-                // Authenticate admin
                 var admin = await _context.Accounts
                     .FirstOrDefaultAsync(a => a.Email == email && a.Password == password && a.Role == "Admin");
 
@@ -93,7 +89,6 @@ namespace Assignment_3_SWE30003.Controllers
                     return Unauthorized("Invalid credentials or not an admin account.");
                 }
 
-                // Get all invoices
                 var invoices = await _context.Invoices
                     .Include(i => i.Order)
                     .OrderByDescending(i => i.IssueDate)
@@ -123,7 +118,6 @@ namespace Assignment_3_SWE30003.Controllers
         {
             try
             {
-                // Authenticate admin (manual invoice generation is admin-only)
                 var admin = await _context.Accounts
                     .FirstOrDefaultAsync(a => a.Email == email && a.Password == password && a.Role == "Admin");
 
@@ -132,7 +126,6 @@ namespace Assignment_3_SWE30003.Controllers
                     return Unauthorized("Invalid credentials or not an admin account.");
                 }
 
-                // Get order
                 var order = await _context.Orders
                     .Include(o => o.Lines)
                     .FirstOrDefaultAsync(o => o.Id == orderId);
@@ -142,7 +135,6 @@ namespace Assignment_3_SWE30003.Controllers
                     return NotFound("Order not found.");
                 }
 
-                // Check if invoice already exists
                 var existingInvoice = await _context.Invoices
                     .FirstOrDefaultAsync(i => i.OrderId == orderId);
 

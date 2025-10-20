@@ -25,13 +25,11 @@ namespace Assignment_3_SWE30003.Models
 
         public ICollection<OrderLine> Lines { get; set; } = new List<OrderLine>();
 
-        // Shipment details (for Step 4)
         public string? ShipmentAddress { get; set; }
         public string? ContactName { get; set; }
         public string? ContactPhone { get; set; }
         public string? Note { get; set; }
 
-        // Factory method to create order from cart snapshot
         public static Order FromCart(ShoppingCart cart)
         {
             var order = new Order
@@ -44,7 +42,6 @@ namespace Assignment_3_SWE30003.Models
                 Status = OrderStatus.PendingPayment
             };
 
-            // Snapshot cart items as order lines
             foreach (var item in cart.Items)
             {
                 var orderLine = new OrderLine
@@ -61,7 +58,6 @@ namespace Assignment_3_SWE30003.Models
             return order;
         }
 
-        // Status transition methods with guards
         public void SetStatusPaid()
         {
             if (Status != OrderStatus.PendingPayment)

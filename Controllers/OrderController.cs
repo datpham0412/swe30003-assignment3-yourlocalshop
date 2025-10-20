@@ -41,25 +41,18 @@ namespace Assignment_3_SWE30003.Controllers
                     return BadRequest("Shopping cart is empty. Cannot create order.");
                 }
 
-                // Create order from cart snapshot
                 var order = cart.CreateOrderFromSnapshot(customer.Id);
 
-                // Set shipment details
                 order.ShipmentAddress = request.ShipmentAddress;
                 order.ContactName = request.ContactName;
                 order.ContactPhone = request.ContactPhone;
                 order.Note = request.Note;
 
-                // Add order to context
                 _context.Orders.Add(order);
 
-                // Clear the cart (optional - depends on business requirements)
-                // For now, we'll keep the cart intact so customer can order again
-                // cart.Clear();
 
                 await _context.SaveChangesAsync();
 
-                // Return order response
                 return Ok(MapToOrderResponse(order));
             }
             catch (Exception ex)
@@ -73,7 +66,6 @@ namespace Assignment_3_SWE30003.Controllers
         {
             try
             {
-                // Authenticate customer
                 var customer = await _context.Accounts
                     .FirstOrDefaultAsync(a => a.Email == email && a.Password == password && a.Role == "Customer");
 
@@ -82,7 +74,6 @@ namespace Assignment_3_SWE30003.Controllers
                     return Unauthorized("Invalid credentials or not a customer account.");
                 }
 
-                // Get customer's orders
                 var orders = await _context.Orders
                     .Include(o => o.Lines)
                     .Where(o => o.CustomerId == customer.Id)
@@ -104,7 +95,6 @@ namespace Assignment_3_SWE30003.Controllers
         {
             try
             {
-                // Authenticate user (customer or admin)
                 var user = await _context.Accounts
                     .FirstOrDefaultAsync(a => a.Email == email && a.Password == password);
 
@@ -113,7 +103,6 @@ namespace Assignment_3_SWE30003.Controllers
                     return Unauthorized("Invalid credentials.");
                 }
 
-                // Get order
                 var order = await _context.Orders
                     .Include(o => o.Lines)
                     .FirstOrDefaultAsync(o => o.Id == id);
@@ -123,7 +112,6 @@ namespace Assignment_3_SWE30003.Controllers
                     return NotFound("Order not found.");
                 }
 
-                // Authorization check: customer can only see their own orders, admin can see all
                 if (user.Role == "Customer" && order.CustomerId != user.Id)
                 {
                     return Unauthorized("You are not authorized to view this order.");
@@ -142,7 +130,6 @@ namespace Assignment_3_SWE30003.Controllers
         {
             try
             {
-                // Authenticate admin
                 var admin = await _context.Accounts
                     .FirstOrDefaultAsync(a => a.Email == email && a.Password == password && a.Role == "Admin");
 
@@ -151,7 +138,6 @@ namespace Assignment_3_SWE30003.Controllers
                     return Unauthorized("Invalid credentials or not an admin account.");
                 }
 
-                // Get all orders
                 var orders = await _context.Orders
                     .Include(o => o.Lines)
                     .OrderByDescending(o => o.OrderDate)
@@ -172,7 +158,6 @@ namespace Assignment_3_SWE30003.Controllers
         {
             try
             {
-                // Authenticate admin
                 var admin = await _context.Accounts
                     .FirstOrDefaultAsync(a => a.Email == email && a.Password == password && a.Role == "Admin");
 
@@ -181,7 +166,6 @@ namespace Assignment_3_SWE30003.Controllers
                     return Unauthorized("Invalid credentials or not an admin account.");
                 }
 
-                // Get order
                 var order = await _context.Orders
                     .Include(o => o.Lines)
                     .FirstOrDefaultAsync(o => o.Id == id);
@@ -191,7 +175,6 @@ namespace Assignment_3_SWE30003.Controllers
                     return NotFound("Order not found.");
                 }
 
-                // Update status based on requested status
                 try
                 {
                     switch (request.Status)

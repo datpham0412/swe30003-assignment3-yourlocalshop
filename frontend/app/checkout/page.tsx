@@ -12,7 +12,6 @@ import { Textarea } from "@/components/ui/textarea"
 import { Spinner } from "@/components/ui/spinner"
 import { LogOut, ArrowLeft, Package } from "lucide-react"
 import { toast } from "sonner"
-import { Toaster } from "sonner"
 
 interface Cart {
   cartId: number

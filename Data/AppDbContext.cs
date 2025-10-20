@@ -19,19 +19,16 @@ namespace Assignment_3_SWE30003.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // Product configuration
             modelBuilder.Entity<Product>()
                 .Property(p => p.IsInCatalogue)
                 .HasDefaultValue(false);
 
-            // Inventory configuration
             modelBuilder.Entity<Inventory>()
                 .HasOne(i => i.Product)
                 .WithOne(p => p.Inventory)
                 .HasForeignKey<Inventory>(i => i.ProductId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // ShoppingCart configuration
             modelBuilder.Entity<ShoppingCart>()
                 .HasIndex(sc => sc.CustomerId)
                 .IsUnique();
@@ -42,7 +39,6 @@ namespace Assignment_3_SWE30003.Data
                 .HasForeignKey(ci => ci.ShoppingCartId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // CartItem constraints
             modelBuilder.Entity<CartItem>()
                 .Property(ci => ci.Quantity)
                 .HasAnnotation("MinValue", 1);
@@ -51,7 +47,6 @@ namespace Assignment_3_SWE30003.Data
                 .Property(ci => ci.UnitPrice)
                 .HasAnnotation("MinValue", 0);
 
-            // Order configuration
             modelBuilder.Entity<Order>()
                 .HasMany(o => o.Lines)
                 .WithOne()
@@ -62,7 +57,6 @@ namespace Assignment_3_SWE30003.Data
                 .Property(o => o.Status)
                 .HasConversion<string>();
 
-            // Payment configuration
             modelBuilder.Entity<Payment>()
                 .HasOne(p => p.Order)
                 .WithOne()
@@ -73,7 +67,6 @@ namespace Assignment_3_SWE30003.Data
                 .Property(p => p.Status)
                 .HasConversion<string>();
 
-            // Invoice configuration
             modelBuilder.Entity<Invoice>()
                 .HasOne(i => i.Order)
                 .WithOne()

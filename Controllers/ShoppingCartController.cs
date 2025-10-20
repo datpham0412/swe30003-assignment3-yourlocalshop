@@ -11,7 +11,7 @@ namespace Assignment_3_SWE30003.Controllers
     public class ShoppingCartController : ControllerBase
     {
         private readonly AppDbContext _context;
-        private const decimal TAX_RATE = 0.10m; // 10% tax rate
+        private const decimal TAX_RATE = 0.10m; 
 
         public ShoppingCartController(AppDbContext context)
         {
@@ -23,7 +23,6 @@ namespace Assignment_3_SWE30003.Controllers
         {
             try
             {
-                // Authenticate customer
                 var customer = await _context.Accounts
                     .FirstOrDefaultAsync(a => a.Email == email && a.Password == password && a.Role == "Customer");
 
@@ -32,7 +31,6 @@ namespace Assignment_3_SWE30003.Controllers
                     return Unauthorized("Invalid credentials or not a customer account.");
                 }
 
-                // Get or create shopping cart for customer
                 var cart = await _context.ShoppingCarts
                     .Include(c => c.Items)
                     .FirstOrDefaultAsync(c => c.CustomerId == customer.Id);
@@ -41,29 +39,25 @@ namespace Assignment_3_SWE30003.Controllers
                 {
                     cart = new ShoppingCart { CustomerId = customer.Id };
                     _context.ShoppingCarts.Add(cart);
-                    await _context.SaveChangesAsync(); // Save to get cart ID
+                    await _context.SaveChangesAsync(); 
                 }
 
-                // Get product details
                 var product = await _context.Products.FindAsync(request.ProductId);
                 if (product == null)
                 {
                     return BadRequest("Product not found.");
                 }
 
-                // Get available quantity from inventory
                 var inventory = await _context.Inventories
                     .FirstOrDefaultAsync(i => i.ProductId == request.ProductId);
 
                 int availableQty = inventory?.Quantity ?? 0;
 
-                // Add item to cart
                 cart.AddItem(request.ProductId, request.Quantity, product, availableQty);
                 cart.RecalculateTotals(TAX_RATE);
 
                 await _context.SaveChangesAsync();
 
-                // Return cart response
                 return Ok(MapToCartResponse(cart));
             }
             catch (InvalidOperationException ex)
@@ -81,7 +75,6 @@ namespace Assignment_3_SWE30003.Controllers
         {
             try
             {
-                // Authenticate customer
                 var customer = await _context.Accounts
                     .FirstOrDefaultAsync(a => a.Email == email && a.Password == password && a.Role == "Customer");
 
@@ -90,7 +83,6 @@ namespace Assignment_3_SWE30003.Controllers
                     return Unauthorized("Invalid credentials or not a customer account.");
                 }
 
-                // Get customer's shopping cart
                 var cart = await _context.ShoppingCarts
                     .Include(c => c.Items)
                     .FirstOrDefaultAsync(c => c.CustomerId == customer.Id);
@@ -100,33 +92,28 @@ namespace Assignment_3_SWE30003.Controllers
                     return BadRequest("Shopping cart not found.");
                 }
 
-                // Find the cart item
                 var cartItem = cart.Items.FirstOrDefault(i => i.Id == request.CartItemId);
                 if (cartItem == null)
                 {
                     return BadRequest("Cart item not found.");
                 }
 
-                // Get product details
                 var product = await _context.Products.FindAsync(cartItem.ProductId);
                 if (product == null)
                 {
                     return BadRequest("Product not found.");
                 }
 
-                // Get available quantity from inventory
                 var inventory = await _context.Inventories
                     .FirstOrDefaultAsync(i => i.ProductId == cartItem.ProductId);
 
                 int availableQty = inventory?.Quantity ?? 0;
 
-                // Update item
                 cart.UpdateItem(request.CartItemId, request.Quantity, product, availableQty);
                 cart.RecalculateTotals(TAX_RATE);
 
                 await _context.SaveChangesAsync();
 
-                // Return cart response
                 return Ok(MapToCartResponse(cart));
             }
             catch (InvalidOperationException ex)
@@ -144,7 +131,6 @@ namespace Assignment_3_SWE30003.Controllers
         {
             try
             {
-                // Authenticate customer
                 var customer = await _context.Accounts
                     .FirstOrDefaultAsync(a => a.Email == email && a.Password == password && a.Role == "Customer");
 
@@ -153,7 +139,6 @@ namespace Assignment_3_SWE30003.Controllers
                     return Unauthorized("Invalid credentials or not a customer account.");
                 }
 
-                // Get customer's shopping cart
                 var cart = await _context.ShoppingCarts
                     .Include(c => c.Items)
                     .FirstOrDefaultAsync(c => c.CustomerId == customer.Id);
@@ -163,13 +148,11 @@ namespace Assignment_3_SWE30003.Controllers
                     return BadRequest("Shopping cart not found.");
                 }
 
-                // Remove item
                 cart.RemoveItem(request.CartItemId);
                 cart.RecalculateTotals(TAX_RATE);
 
                 await _context.SaveChangesAsync();
 
-                // Return cart response
                 return Ok(MapToCartResponse(cart));
             }
             catch (InvalidOperationException ex)
@@ -187,7 +170,6 @@ namespace Assignment_3_SWE30003.Controllers
         {
             try
             {
-                // Authenticate customer
                 var customer = await _context.Accounts
                     .FirstOrDefaultAsync(a => a.Email == email && a.Password == password && a.Role == "Customer");
 
@@ -196,14 +178,12 @@ namespace Assignment_3_SWE30003.Controllers
                     return Unauthorized("Invalid credentials or not a customer account.");
                 }
 
-                // Get customer's shopping cart
                 var cart = await _context.ShoppingCarts
                     .Include(c => c.Items)
                     .FirstOrDefaultAsync(c => c.CustomerId == customer.Id);
 
                 if (cart == null)
                 {
-                    // Return empty cart
                     return Ok(new CartResponse
                     {
                         CartId = 0,
@@ -214,7 +194,6 @@ namespace Assignment_3_SWE30003.Controllers
                     });
                 }
 
-                // Return cart response
                 return Ok(MapToCartResponse(cart));
             }
             catch (Exception ex)
