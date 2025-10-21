@@ -66,7 +66,30 @@ namespace Assignment_3_SWE30003.Controllers
 
                 await _context.SaveChangesAsync();
 
-                return Ok(MapToOrderResponse(order));
+                // Send email notification for order creation
+                var emailNotification = EmailSender.Send(
+                    to: customer.Email,
+                    subject: $"Order Confirmation — Order #{order.Id}",
+                    body: $"Thank you for your order! Order #{order.Id} has been successfully created. Total: ${order.Total:F2}. Please proceed to payment to complete your purchase."
+                );
+
+                var response = MapToOrderResponse(order);
+                return Ok(new
+                {
+                    response.OrderId,
+                    response.Status,
+                    response.CreatedAt,
+                    response.Lines,
+                    response.Subtotal,
+                    response.Tax,
+                    response.Total,
+                    response.ShipmentAddress,
+                    response.ContactName,
+                    response.ContactPhone,
+                    response.Note,
+                    response.Shipment,
+                    emailNotification = emailNotification
+                });
             }
             catch (Exception ex)
             {

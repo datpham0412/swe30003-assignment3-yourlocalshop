@@ -10,8 +10,16 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Spinner } from "@/components/ui/spinner"
-import { LogOut, ArrowLeft, Package } from "lucide-react"
+import { LogOut, ArrowLeft, Package, Mail } from "lucide-react"
 import { toast } from "sonner"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
 interface Cart {
   cartId: number
@@ -35,6 +43,12 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(true)
   const [cart, setCart] = useState<Cart | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [showEmailModal, setShowEmailModal] = useState(false)
+  const [emailDetails, setEmailDetails] = useState({
+    recipient: "",
+    subject: "",
+    message: "",
+  })
 
   const [formData, setFormData] = useState({
     shipmentAddress: "",
@@ -162,9 +176,25 @@ export default function CheckoutPage() {
         toast.success("Order placed successfully!", {
           description: "Redirecting to payment...",
         })
-        setTimeout(() => {
-          router.push(`/payments/process/${data.orderId}`)
-        }, 1000)
+
+        // Show email confirmation modal
+        if (data.emailNotification) {
+          setEmailDetails({
+            recipient: email!,
+            subject: `Order Confirmation — Order #${data.orderId}`,
+            message: `Thank you for your order! Order #${data.orderId} has been successfully created. Total: $${data.total?.toFixed(2)}. Please proceed to payment to complete your purchase.`,
+          })
+          setShowEmailModal(true)
+
+          // Redirect after showing modal
+          setTimeout(() => {
+            router.push(`/payments/process/${data.orderId}`)
+          }, 4000)
+        } else {
+          setTimeout(() => {
+            router.push(`/payments/process/${data.orderId}`)
+          }, 1500)
+        }
       } else {
         const errorText = await response.text()
         console.error("Order creation failed:", errorText)
@@ -351,6 +381,51 @@ export default function CheckoutPage() {
           )}
         </div>
       </main>
+
+      {/* Email Confirmation Modal */}
+      <Dialog open={showEmailModal} onOpenChange={setShowEmailModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-3 bg-green-100 rounded-full">
+                <Mail className="h-6 w-6 text-green-600" />
+              </div>
+              <DialogTitle className="text-xl">Email Sent Successfully!</DialogTitle>
+            </div>
+            <DialogDescription>
+              A confirmation email has been sent to your email address.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <p className="text-sm font-semibold text-gray-700">Recipient:</p>
+              <p className="text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded">{emailDetails.recipient}</p>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-sm font-semibold text-gray-700">Subject:</p>
+              <p className="text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded">{emailDetails.subject}</p>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-sm font-semibold text-gray-700">Message:</p>
+              <div className="text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded max-h-32 overflow-y-auto">
+                {emailDetails.message}
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              onClick={() => setShowEmailModal(false)}
+              className="w-full bg-gradient-to-r from-purple-600 to-emerald-500 hover:from-purple-700 hover:to-emerald-600"
+            >
+              Continue
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

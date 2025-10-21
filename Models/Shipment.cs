@@ -30,9 +30,23 @@ namespace Assignment_3_SWE30003.Models
         public string NotifyEmailSender()
         {
             if (Status == ShipmentStatus.Dispatched)
-                return $"Email notification: Order {Order.Id} has been dispatched. Tracking number: {TrackingNumber}";
+            {
+                return EmailSender.Send(
+                    to: "customer@example.com",
+                    subject: $"Shipment Dispatched — Order #{OrderId}",
+                    body: $"Your shipment has been dispatched. Tracking number: {TrackingNumber}. You can expect delivery soon."
+                );
+            }
+
             if (Status == ShipmentStatus.Delivered)
-                return $"Email notification: Order {Order.Id} has been delivered to {Address}";
+            {
+                return EmailSender.Send(
+                    to: "customer@example.com",
+                    subject: $"Order Delivered — Order #{OrderId}",
+                    body: $"Your order has been successfully delivered to {Address}. Thank you for your business!"
+                );
+            }
+
             return string.Empty;
         }
     }
