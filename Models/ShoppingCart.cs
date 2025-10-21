@@ -16,19 +16,15 @@ namespace Assignment_3_SWE30003.Models
                 throw new InvalidOperationException("Product is out of stock.");
             }
 
-            // Clamp quantity to available stock
             int finalQuantity = Math.Min(quantity, availableQty);
 
-            // Check if item already exists in cart
             var existingItem = Items.FirstOrDefault(i => i.ProductId == productId);
             if (existingItem != null)
             {
-                // Update existing item quantity (clamped to available)
                 existingItem.Quantity = Math.Min(existingItem.Quantity + finalQuantity, availableQty);
             }
             else
             {
-                // Add new item
                 var cartItem = new CartItem
                 {
                     ProductId = productId,
@@ -54,11 +50,9 @@ namespace Assignment_3_SWE30003.Models
                 throw new InvalidOperationException("Cart item not found.");
             }
 
-            // Clamp quantity to available stock
             int finalQuantity = Math.Min(quantity, availableQty);
             item.Quantity = finalQuantity;
 
-            // Update price in case it changed
             item.UnitPrice = product.Price;
             item.ProductName = product.Name;
         }
@@ -90,8 +84,6 @@ namespace Assignment_3_SWE30003.Models
 
         public void Clear()
         {
-            // Remove all items from the collection
-            // EF Core will track these as deleted
             var itemsToRemove = Items.ToList();
             foreach (var item in itemsToRemove)
             {

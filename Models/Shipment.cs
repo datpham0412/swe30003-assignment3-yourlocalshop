@@ -20,12 +20,6 @@ namespace Assignment_3_SWE30003.Models
 
         public Order Order { get; set; } = default!;
 
-        // === Responsibilities ===
-        // 1️⃣ Knows shipment details (address, contact, tracking number, delivery date)
-        // 2️⃣ Knows order details (order number) → collaborator: Order
-        // 3️⃣ Update shipment details (status, delivery date)
-        // 4️⃣ Notify EmailSender when order is shipped
-
         public void UpdateStatus(ShipmentStatus newStatus, DateTime? deliveryDate = null)
         {
             Status = newStatus;

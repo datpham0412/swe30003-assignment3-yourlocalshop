@@ -14,13 +14,6 @@ namespace Assignment_3_SWE30003.Models
         public int TotalOrders { get; private set; }
         public decimal TotalRevenue { get; private set; }
         public DateTime GeneratedAt { get; private set; } = DateTime.UtcNow;
-
-        // === Responsibilities ===
-        // 1️⃣ Knows total amounts and date of purchase of all orders → collaborator: Order
-        // 2️⃣ Calculates total profit for a period (daily, weekly, monthly)
-        // 3️⃣ Calculates number of orders for a period
-        // 4️⃣ Generates report summary
-
         public static SalesReport Generate(IEnumerable<Order> orders, ReportPeriod period)
         {
             var now = DateTime.UtcNow;

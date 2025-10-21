@@ -107,7 +107,6 @@ namespace Assignment_3_SWE30003.Models
 
         public void MarkFailed()
         {
-            // Can fail from any status except Delivered
             if (Status == OrderStatus.Delivered)
             {
                 throw new InvalidOperationException("Cannot mark a delivered order as Failed.");
@@ -117,7 +116,6 @@ namespace Assignment_3_SWE30003.Models
 
         public void MarkCancelled()
         {
-            // Can cancel if not yet paid, processing, or delivered
             if (Status == OrderStatus.Delivered || Status == OrderStatus.Shipped || Status == OrderStatus.Packed)
             {
                 throw new InvalidOperationException($"Cannot cancel order in {Status} status.");
@@ -140,16 +138,8 @@ namespace Assignment_3_SWE30003.Models
             }
         }
 
-        public void InitPayment(object paymentInfo)
-        {
-            // Stub: Will be implemented in Step 3
-            // This will create Payment entity linked to this order
-        }
-
         public void ApplyStockDeduction(Action<int, int> deductByProductId)
         {
-            // Stub: Will be implemented in Step 3
-            // This will deduct inventory for each order line (idempotent)
             if (Status != OrderStatus.Paid)
             {
                 throw new InvalidOperationException("Can only deduct stock for paid orders.");
@@ -159,13 +149,6 @@ namespace Assignment_3_SWE30003.Models
             {
                 deductByProductId(line.ProductId, line.Quantity);
             }
-        }
-
-        // Step 4 placeholder method
-        public void InitShipment(object shipmentInfo)
-        {
-            // Stub: Will be implemented in Step 4
-            // This will create Shipment entity linked to this order
         }
     }
 }

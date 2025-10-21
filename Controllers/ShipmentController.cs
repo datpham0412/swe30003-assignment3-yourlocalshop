@@ -16,7 +16,6 @@ namespace Assignment_3_SWE30003.Controllers
             _context = context;
         }
 
-        // GET /api/Shipment/list - Returns all shipments (admin only)
         [HttpGet("list")]
         public async Task<IActionResult> GetAllShipments([FromQuery] string email, [FromQuery] string password)
         {
@@ -62,7 +61,6 @@ namespace Assignment_3_SWE30003.Controllers
             }
         }
 
-        // PUT /api/Shipment/update - Update shipment status and trigger email notification
         [HttpPut("update")]
         public async Task<IActionResult> UpdateShipment(
             [FromQuery] string email,
@@ -90,10 +88,8 @@ namespace Assignment_3_SWE30003.Controllers
                     return NotFound("Shipment not found for the specified order.");
                 }
 
-                // Update shipment status using domain logic
                 shipment.UpdateStatus(status, deliveryDate);
 
-                // Trigger email notification
                 var emailMessage = shipment.NotifyEmailSender();
 
                 await _context.SaveChangesAsync();

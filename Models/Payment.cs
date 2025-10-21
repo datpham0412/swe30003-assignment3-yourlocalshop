@@ -17,22 +17,15 @@ namespace Assignment_3_SWE30003.Models
         public DateTime PaymentDate { get; private set; } = DateTime.UtcNow;
         public Order Order { get; set; } = default!;
 
-        // Responsibility: Process the payment (simulation)
-        // Collaborates with Order to update status and apply stock deduction
         public void ProcessPayment(Action<int, int> deductStock)
         {
-            // Simulate successful payment
             Status = PaymentStatus.Success;
             PaymentDate = DateTime.UtcNow;
 
-            // Update order status to Paid
             Order.SetStatusPaid();
 
-            // Apply stock deduction through the order
             Order.ApplyStockDeduction(deductStock);
         }
-
-        // Allow manual failure (for testing or future logic)
         public void MarkFailed()
         {
             Status = PaymentStatus.Failed;

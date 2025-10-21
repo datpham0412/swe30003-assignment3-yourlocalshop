@@ -16,7 +16,6 @@ namespace Assignment_3_SWE30003.Controllers
             _context = context;
         }
 
-        // GET /api/Report/generate?period=Daily|Weekly|Monthly
         [HttpGet("generate")]
         public async Task<IActionResult> GenerateSalesReport(
             [FromQuery] string email,
@@ -33,15 +32,12 @@ namespace Assignment_3_SWE30003.Controllers
                     return Unauthorized("Invalid credentials or not an admin account.");
                 }
 
-                // Fetch all Paid or Delivered orders
                 var orders = await _context.Orders
                     .Where(o => o.Status == OrderStatus.Paid || o.Status == OrderStatus.Delivered)
                     .ToListAsync();
 
-                // Generate report using domain logic
                 var report = SalesReport.Generate(orders, period);
 
-                // Optionally persist the report
                 _context.SalesReports.Add(report);
                 await _context.SaveChangesAsync();
 

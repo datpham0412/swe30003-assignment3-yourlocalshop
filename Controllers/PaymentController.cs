@@ -86,7 +86,6 @@ namespace Assignment_3_SWE30003.Controllers
                 var invoice = Invoice.FromOrder(order);
                 _context.Invoices.Add(invoice);
 
-                // Create a shipment automatically after successful payment
                 var shipment = new Shipment
                 {
                     OrderId = order.Id,
