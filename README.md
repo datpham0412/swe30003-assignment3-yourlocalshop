@@ -49,7 +49,7 @@ dotnet run
 or
 
 ```
-dotnet run --launch-profile <profile-name>
+dotnet run --launch-profile Assignment_3_SWE30003
 ```
 
 3. Sync migrations when pulling new commits
