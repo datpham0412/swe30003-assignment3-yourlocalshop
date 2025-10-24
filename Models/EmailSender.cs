@@ -2,6 +2,7 @@ namespace Assignment_3_SWE30003.Models;
 
 public static class EmailSender
 {
+    // Send confirmation email for completed order to user (3.3.14)
     public static string Send(string to, string subject, string body)
     {
         Console.ForegroundColor = ConsoleColor.Green;

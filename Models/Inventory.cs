@@ -15,6 +15,7 @@ namespace Assignment_3_SWE30003.Models
 
         public Product? Product { get; set; }
 
+        // Add new product quantity (3.3.11)
         public static string AddInventory(AppDbContext context, int productId, int quantity)
         {
             var product = context.Products.FirstOrDefault(p => p.Id == productId);
@@ -34,7 +35,7 @@ namespace Assignment_3_SWE30003.Models
             context.SaveChanges();
             return $"Added inventory for '{product.Name}' with {quantity} units.";
         }
-
+        // Edits current stock quantity for a product (3.3.11)
         public static string UpdateQuantity(AppDbContext context, int productId, int newQuantity)
         {
             var inventory = context.Inventories.FirstOrDefault(i => i.ProductId == productId);
@@ -46,6 +47,7 @@ namespace Assignment_3_SWE30003.Models
             return $"Updated stock for product ID {productId} to {newQuantity}.";
         }
 
+        // Edits current stock quantity for a product (3.3.11)
         public static string DeleteInventory(AppDbContext context, int productId)
         {
             var inventory = context.Inventories.FirstOrDefault(i => i.ProductId == productId);
@@ -56,7 +58,7 @@ namespace Assignment_3_SWE30003.Models
             context.SaveChanges();
             return $"Inventory for product ID {productId} deleted.";
         }
-
+        // Knows details and quantity of all products (3.3.11)
         public static List<Inventory> GetAllInventories(AppDbContext context)
         {
             return context.Inventories

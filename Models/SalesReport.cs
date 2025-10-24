@@ -14,6 +14,7 @@ namespace Assignment_3_SWE30003.Models
         public int TotalOrders { get; private set; }
         public decimal TotalRevenue { get; private set; }
         public DateTime GeneratedAt { get; private set; } = DateTime.UtcNow;
+        // Generate sales report for a period (daily, weekly, and monthly) (3.3.12)
         public static SalesReport Generate(IEnumerable<Order> orders, ReportPeriod period)
         {
             var now = DateTime.UtcNow;

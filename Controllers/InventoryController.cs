@@ -15,6 +15,7 @@ namespace Assignment_3_SWE30003.Controllers
             _context = context;
         }
 
+        // Add a new product quantity (3.3.11)
         [HttpPost("add")]
         public IActionResult Add(string email, string password, int productId, int quantity)
         {
@@ -29,6 +30,8 @@ namespace Assignment_3_SWE30003.Controllers
             return Ok(result);
         }
 
+
+        // Edits current stock quantity for a product (3.3.11)
         [HttpPut("update")]
         public IActionResult Update(string email, string password, int productId, int quantity)
         {
@@ -43,6 +46,8 @@ namespace Assignment_3_SWE30003.Controllers
             return Ok(result);
         }
 
+
+        // Edits current stock quantity for a product (3.3.11)
         [HttpDelete("delete")]
         public IActionResult Delete(string email, string password, int productId)
         {
@@ -57,6 +62,7 @@ namespace Assignment_3_SWE30003.Controllers
             return Ok(result);
         }
 
+        // Knows details and quantity of all products (3.3.11)
         [HttpGet("list")]
         public IActionResult List()
         {

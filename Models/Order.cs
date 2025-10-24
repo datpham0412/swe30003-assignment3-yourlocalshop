@@ -32,6 +32,7 @@ namespace Assignment_3_SWE30003.Models
         public string? ContactPhone { get; set; }
         public string? Note { get; set; }
 
+        // Knows order details (order status, items from cart, total price, and customer details) (3.3.5)
         public static Order FromCart(ShoppingCart cart)
         {
             var order = new Order
@@ -60,6 +61,7 @@ namespace Assignment_3_SWE30003.Models
             return order;
         }
 
+        // Updates order status (3.3.5)
         public void SetStatusPaid()
         {
             if (Status != OrderStatus.PendingPayment)
@@ -68,7 +70,7 @@ namespace Assignment_3_SWE30003.Models
             }
             Status = OrderStatus.Paid;
         }
-
+        // Updates order status (3.3.5)
         public void AdvanceToProcessing()
         {
             if (Status != OrderStatus.Paid)
@@ -78,6 +80,7 @@ namespace Assignment_3_SWE30003.Models
             Status = OrderStatus.Processing;
         }
 
+        // Update shipment status (3.3.4)
         public void MarkPacked()
         {
             if (Status != OrderStatus.Processing)
@@ -87,6 +90,7 @@ namespace Assignment_3_SWE30003.Models
             Status = OrderStatus.Packed;
         }
 
+        // Update shipment status (3.3.4)
         public void MarkShipped()
         {
             if (Status != OrderStatus.Packed)
@@ -95,7 +99,7 @@ namespace Assignment_3_SWE30003.Models
             }
             Status = OrderStatus.Shipped;
         }
-
+        // Update shipment status (3.3.4)
         public void MarkDelivered()
         {
             if (Status != OrderStatus.Shipped)
@@ -104,7 +108,7 @@ namespace Assignment_3_SWE30003.Models
             }
             Status = OrderStatus.Delivered;
         }
-
+        // Update shipment status (3.3.4)
         public void MarkFailed()
         {
             if (Status == OrderStatus.Delivered)
@@ -114,6 +118,7 @@ namespace Assignment_3_SWE30003.Models
             Status = OrderStatus.Failed;
         }
 
+        // Update shipment status (3.3.4)
         public void MarkCancelled()
         {
             if (Status == OrderStatus.Delivered || Status == OrderStatus.Shipped || Status == OrderStatus.Packed)
@@ -122,22 +127,7 @@ namespace Assignment_3_SWE30003.Models
             }
             Status = OrderStatus.Cancelled;
         }
-
-        // Step 3 placeholder methods (stubs for future implementation)
-        public void ValidateAvailabilityForPayment(Func<int, int> getAvailableQty)
-        {
-            // Stub: Will be implemented in Step 3
-            // Check each order line against current inventory
-            foreach (var line in Lines)
-            {
-                int availableQty = getAvailableQty(line.ProductId);
-                if (availableQty < line.Quantity)
-                {
-                    throw new InvalidOperationException($"Insufficient stock for {line.ProductName}. Available: {availableQty}, Required: {line.Quantity}");
-                }
-            }
-        }
-
+        // Triggers stock update after order completion (3.3.5)
         public void ApplyStockDeduction(Action<int, int> deductByProductId)
         {
             if (Status != OrderStatus.Paid)

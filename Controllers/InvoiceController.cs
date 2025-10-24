@@ -111,7 +111,7 @@ namespace Assignment_3_SWE30003.Controllers
                 return StatusCode(500, $"An error occurred: {ex.Message}");
             }
         }
-
+        // Generate Invoice (3.3.15)
         [HttpPost("generate/{orderId}")]
         public async Task<IActionResult> GenerateInvoice([FromQuery] string email, [FromQuery] string password, int orderId)
         {

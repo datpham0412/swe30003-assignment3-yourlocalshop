@@ -7,11 +7,5 @@ namespace Assignment_3_SWE30003.Models
         public string Password { get; set; } = string.Empty;
         public string Status { get; set; } = "Active";
         public string Role { get; set; } = "Customer";
-
-        public void ManageAccountInfo(string email, string password)
-        {
-            Email = email;
-            Password = password;
-        }
     }
 }
