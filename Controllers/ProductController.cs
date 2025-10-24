@@ -21,8 +21,9 @@ namespace Assignment_3_SWE30003.Controllers
             var admin = _context.Accounts.FirstOrDefault(a => a.Email == email && a.Password == password && a.Role == "Admin");
             if (admin == null) return Unauthorized("Access denied. Only Admins can add products.");
 
-            var adminAcc = new AdminAccount(_context);
-            var result = adminAcc.AddProduct(name, category, price);
+            // Call Product model directly instead of using AdminAccount helper
+            var product = new Product { Name = name, Category = category, Price = price };
+            var result = product.AddToDatabase(_context);
             return Ok(result);
         }
 
@@ -32,8 +33,7 @@ namespace Assignment_3_SWE30003.Controllers
             var admin = _context.Accounts.FirstOrDefault(a => a.Email == email && a.Password == password && a.Role == "Admin");
             if (admin == null) return Unauthorized("Access denied. Only Admins can update products.");
 
-            var adminAcc = new AdminAccount(_context);
-            var result = adminAcc.UpdateProduct(id, name, category, price);
+            var result = Product.UpdateProduct(_context, id, name, category, price);
             return Ok(result);
         }
 
@@ -43,8 +43,7 @@ namespace Assignment_3_SWE30003.Controllers
             var admin = _context.Accounts.FirstOrDefault(a => a.Email == email && a.Password == password && a.Role == "Admin");
             if (admin == null) return Unauthorized("Access denied. Only Admins can delete products.");
 
-            var adminAcc = new AdminAccount(_context);
-            var result = adminAcc.DeleteProduct(id);
+            var result = Product.DeleteProduct(_context, id);
             return Ok(result);
         }
 

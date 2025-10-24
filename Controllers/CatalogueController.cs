@@ -31,8 +31,8 @@ namespace Assignment_3_SWE30003.Controllers
             if (admin == null)
                 return Unauthorized("Access denied. Only Admins can manage the catalogue.");
 
-            var adminAcc = new AdminAccount(_context);
-            return Ok(adminAcc.AddProductToCatalogue(productId));
+            // Use Product static helper directly
+            return Ok(Product.AddToCatalogue(_context, productId));
         }
 
         [HttpDelete("remove")]
@@ -44,8 +44,8 @@ namespace Assignment_3_SWE30003.Controllers
             if (admin == null)
                 return Unauthorized("Access denied. Only Admins can manage the catalogue.");
 
-            var adminAcc = new AdminAccount(_context);
-            return Ok(adminAcc.RemoveProductFromCatalogue(productId));
+            // Use Product static helper directly
+            return Ok(Product.RemoveFromCatalogue(_context, productId));
         }
     }
 }

@@ -9,13 +9,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+// role select removed; no select components needed here
 import { Spinner } from "@/components/ui/spinner"
 
 export default function AuthPage() {
   const router = useRouter()
   const [signInData, setSignInData] = useState({ email: "", password: "" })
-  const [signUpData, setSignUpData] = useState({ email: "", password: "", confirmPassword: "", role: "Customer" })
+  const [signUpData, setSignUpData] = useState({ name: "", email: "", password: "", confirmPassword: "", phone: "" })
   const [signInLoading, setSignInLoading] = useState(false)
   const [signUpLoading, setSignUpLoading] = useState(false)
   const [signInMessage, setSignInMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
@@ -50,8 +50,16 @@ export default function AuthPage() {
           }
         }, 500)
       } else {
-        const errorText = await response.text()
-        setSignInMessage({ type: "error", text: errorText || "Sign in failed. Please try again." })
+        // Prefer JSON { message } error, fall back to plain text
+        let errorText = "Sign in failed. Please try again."
+        try {
+          const errJson = await response.json()
+          errorText = errJson?.message ?? errorText
+        } catch {
+          const txt = await response.text()
+          if (txt) errorText = txt
+        }
+        setSignInMessage({ type: "error", text: errorText })
       }
     } catch (error) {
       setSignInMessage({ type: "error", text: "Network error. Please check your connection." })
@@ -65,24 +73,68 @@ export default function AuthPage() {
     setSignUpLoading(true)
     setSignUpMessage(null)
 
+    if (!signUpData.name || signUpData.name.trim() === "") {
+      setSignUpMessage({ type: "error", text: "Name is required." })
+      setSignUpLoading(false)
+      return
+    }
+
     if (signUpData.password !== signUpData.confirmPassword) {
       setSignUpMessage({ type: "error", text: "Passwords do not match." })
       setSignUpLoading(false)
       return
     }
 
+    // Basic Australian phone sanitization/normalization
+    const sanitizeAusPhone = (input: string) => {
+      if (!input) return ""
+      // Remove non-digit characters
+      let digits = input.replace(/\D/g, "")
+      // If it starts with 61 (country code) after stripping, normalize to +61
+      if (digits.startsWith("61")) return "+" + digits
+      // If it starts with 0 (local), replace leading 0 with +61
+      if (digits.startsWith("0")) return "+61" + digits.slice(1)
+      // Otherwise, fallback to digits (caller should ensure correctness)
+      return digits
+    }
+
+    const phoneNormalized = sanitizeAusPhone(signUpData.phone)
+    if (!phoneNormalized) {
+      setSignUpMessage({ type: "error", text: "Phone number is required." })
+      setSignUpLoading(false)
+      return
+    }
+
     try {
-      const response = await fetch(
-        `http://localhost:5074/api/Auth/register?email=${encodeURIComponent(signUpData.email)}&password=${encodeURIComponent(signUpData.password)}&role=${encodeURIComponent(signUpData.role)}`,
-        { method: "POST" },
-      )
+      const response = await fetch(`http://localhost:5074/api/Auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name: signUpData.name, email: signUpData.email, password: signUpData.password, phone: phoneNormalized }),
+      })
 
       if (response.ok) {
-        setSignUpMessage({ type: "success", text: "Account created successfully!" })
-        setSignUpData({ email: "", password: "", confirmPassword: "", role: "Customer" })
+        // Expect JSON with { message, role }
+        try {
+          const data = await response.json()
+          const msg = data?.message ?? "Account created successfully!"
+          setSignUpMessage({ type: "success", text: msg })
+        } catch (e) {
+          // Fallback to text if server returned plain text unexpectedly
+          const serverText = await response.text()
+          setSignUpMessage({ type: "success", text: serverText || "Account created successfully!" })
+        }
+        setSignUpData({ name: "", email: "", password: "", confirmPassword: "", phone: "" })
       } else {
-        const errorText = await response.text()
-        setSignUpMessage({ type: "error", text: errorText || "Sign up failed. Please try again." })
+        // Try to parse structured error first, fall back to text
+        let errorText = "Sign up failed. Please try again."
+        try {
+          const errJson = await response.json()
+          errorText = errJson?.message ?? errorText
+        } catch {
+          const txt = await response.text()
+          if (txt) errorText = txt
+        }
+        setSignUpMessage({ type: "error", text: errorText })
       }
     } catch (error) {
       setSignUpMessage({ type: "error", text: "Network error. Please check your connection." })
@@ -166,6 +218,19 @@ export default function AuthPage() {
               <TabsContent value="signup">
                 <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="space-y-2">
+                    <Label htmlFor="signup-name">Full name</Label>
+                    <Input
+                      id="signup-name"
+                      type="text"
+                      placeholder="Your full name"
+                      value={signUpData.name}
+                      onChange={(e) => setSignUpData({ ...signUpData, name: e.target.value })}
+                      required
+                      className="rounded-lg"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
                     <Label htmlFor="signup-email">Email</Label>
                     <Input
                       id="signup-email"
@@ -177,6 +242,20 @@ export default function AuthPage() {
                       className="rounded-lg"
                     />
                   </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-phone">Contact number (Australia)</Label>
+                    <Input
+                      id="signup-phone"
+                      type="tel"
+                      placeholder="04xx xxx xxx or +61 4xx xxx xxx"
+                      value={signUpData.phone}
+                      onChange={(e) => setSignUpData({ ...signUpData, phone: e.target.value })}
+                      required
+                      className="rounded-lg"
+                    />
+                  </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="signup-password">Password</Label>
                     <Input
@@ -189,6 +268,7 @@ export default function AuthPage() {
                       className="rounded-lg"
                     />
                   </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="signup-confirm-password">Confirm Password</Label>
                     <Input
@@ -201,21 +281,7 @@ export default function AuthPage() {
                       className="rounded-lg"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-role">Role</Label>
-                    <Select
-                      value={signUpData.role}
-                      onValueChange={(value) => setSignUpData({ ...signUpData, role: value })}
-                    >
-                      <SelectTrigger id="signup-role" className="rounded-lg">
-                        <SelectValue placeholder="Select a role" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Customer">Customer</SelectItem>
-                        <SelectItem value="Admin">Admin</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  {/* role removed: users will default to Customer on backend */}
 
                   {signUpMessage && (
                     <p className={`text-sm ${signUpMessage.type === "success" ? "text-green-600" : "text-red-600"}`}>

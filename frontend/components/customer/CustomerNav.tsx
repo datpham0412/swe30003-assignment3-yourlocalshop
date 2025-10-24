@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { ShoppingBag, ShoppingCart, Package, Home, LogOut } from "lucide-react"
+import { ShoppingBag, ShoppingCart, Package, User, LogOut } from "lucide-react"
 import Link from "next/link"
 
 export function CustomerNav() {
@@ -55,17 +55,6 @@ export function CustomerNav() {
           </Link>
 
           <nav className="flex items-center gap-2">
-            <Link href="/">
-              <Button
-                variant={isActive("/") ? "default" : "ghost"}
-                size="sm"
-                className={isActive("/") ? "bg-gradient-to-r from-purple-600 to-emerald-500" : "hover:bg-purple-50"}
-              >
-                <Home className="h-4 w-4 mr-2" />
-                Home
-              </Button>
-            </Link>
-
             <Link href="/catalogue">
               <Button
                 variant={isActive("/catalogue") ? "default" : "ghost"}
@@ -109,6 +98,17 @@ export function CustomerNav() {
               >
                 <Package className="h-4 w-4 mr-2" />
                 Orders
+              </Button>
+            </Link>
+
+            <Link href="/account">
+              <Button
+                variant={isActive("/account") ? "default" : "ghost"}
+                size="sm"
+                className={isActive("/account") ? "bg-gradient-to-r from-purple-600 to-emerald-500" : "hover:bg-purple-50"}
+              >
+                <User className="h-4 w-4 mr-2" />
+                Account
               </Button>
             </Link>
 
