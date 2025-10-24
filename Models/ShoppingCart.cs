@@ -9,6 +9,7 @@ namespace Assignment_3_SWE30003.Models
         public decimal Tax { get; private set; }
         public decimal Total { get; private set; }
 
+        // Edits items in the cart (3.3.7)
         public void AddItem(int productId, int quantity, Product product, int availableQty)
         {
             if (availableQty == 0)
@@ -36,7 +37,7 @@ namespace Assignment_3_SWE30003.Models
                 Items.Add(cartItem);
             }
         }
-
+        // Edits items in the cart (3.3.7)
         public void UpdateItem(int cartItemId, int quantity, Product product, int availableQty)
         {
             if (availableQty == 0)
@@ -57,6 +58,7 @@ namespace Assignment_3_SWE30003.Models
             item.ProductName = product.Name;
         }
 
+        // Edits items in the cart (3.3.7)
         public void RemoveItem(int cartItemId)
         {
             var item = Items.FirstOrDefault(i => i.Id == cartItemId);
@@ -67,7 +69,7 @@ namespace Assignment_3_SWE30003.Models
 
             Items.Remove(item);
         }
-
+        // Calculates taxes, and total price (3.3.7)
         public void RecalculateTotals(decimal taxRate)
         {
             Subtotal = Items.Sum(i => i.Subtotal);

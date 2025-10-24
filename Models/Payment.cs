@@ -17,6 +17,8 @@ namespace Assignment_3_SWE30003.Models
         public DateTime PaymentDate { get; private set; } = DateTime.UtcNow;
         public Order Order { get; set; } = default!;
 
+
+        // Process payment (3.3.13)
         public void ProcessPayment(Action<int, int> deductStock)
         {
             Status = PaymentStatus.Success;
@@ -25,11 +27,6 @@ namespace Assignment_3_SWE30003.Models
             Order.SetStatusPaid();
 
             Order.ApplyStockDeduction(deductStock);
-        }
-        public void MarkFailed()
-        {
-            Status = PaymentStatus.Failed;
-            PaymentDate = DateTime.UtcNow;
         }
     }
 }

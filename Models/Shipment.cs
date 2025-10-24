@@ -20,13 +20,14 @@ namespace Assignment_3_SWE30003.Models
 
         public Order Order { get; set; } = default!;
 
+        // Update shipment details (status, delivery date) (3.3.6)
         public void UpdateStatus(ShipmentStatus newStatus, DateTime? deliveryDate = null)
         {
             Status = newStatus;
             if (newStatus == ShipmentStatus.Delivered)
                 DeliveryDate = deliveryDate ?? DateTime.UtcNow;
         }
-
+        // Notify EmailSender when order is shipped (3.3.6)
         public string NotifyEmailSender()
         {
             if (Status == ShipmentStatus.Dispatched)

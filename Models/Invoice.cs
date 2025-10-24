@@ -9,6 +9,7 @@ namespace Assignment_3_SWE30003.Models
         public DateTime IssueDate { get; set; } = DateTime.UtcNow;
         public Order Order { get; set; } = default!;
 
+        // Knows invoice details (invoice number, store information) (3.3.15)
         public static Invoice FromOrder(Order order)
         {
             return new Invoice

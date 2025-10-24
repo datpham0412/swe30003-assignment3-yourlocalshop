@@ -13,7 +13,7 @@ namespace Assignment_3_SWE30003.Models
         public decimal Price { get; set; }
         public bool IsInCatalogue { get; set; } = false; 
         public Inventory? Inventory { get; set; }
-
+        // Edit product details (3.3.10)
         public string AddToDatabase(AppDbContext context)
         {
             if (string.IsNullOrWhiteSpace(Name))
@@ -23,7 +23,7 @@ namespace Assignment_3_SWE30003.Models
             context.SaveChanges();
             return $"Product '{Name}' added successfully!";
         }
-
+        // Edit product details (3.3.10)
         public static string UpdateProduct(
             AppDbContext context,
             int id,
@@ -42,7 +42,7 @@ namespace Assignment_3_SWE30003.Models
             context.SaveChanges();
             return $"Product '{product.Name}' updated successfully!";
         }
-
+        // Edit product details (3.3.10)
         public static string DeleteProduct(AppDbContext context, int id)
         {
             var product = context.Products.FirstOrDefault(p => p.Id == id);
@@ -53,11 +53,12 @@ namespace Assignment_3_SWE30003.Models
             context.SaveChanges();
             return $"Product '{product.Name}' deleted successfully!";
         }
-
+        // Knows product details (name, description, price, category) (3.3.10)
         public static List<Product> GetAllProducts(AppDbContext context)
         {
             return context.Products.ToList();
         }
+        // Add a product to the product listings (3.3.9)
         public static string AddToCatalogue(AppDbContext context, int productId)
         {
             var product = context.Products.FirstOrDefault(p => p.Id == productId);
@@ -71,7 +72,7 @@ namespace Assignment_3_SWE30003.Models
             context.SaveChanges();
             return $"'{product.Name}' has been added to the catalogue.";
         }
-
+        // Remove a product from the product listings (3.3.9)
         public static string RemoveFromCatalogue(AppDbContext context, int productId)
         {
             var product = context.Products.FirstOrDefault(p => p.Id == productId);
@@ -85,7 +86,7 @@ namespace Assignment_3_SWE30003.Models
             context.SaveChanges();
             return $"'{product.Name}' has been removed from the catalogue.";
         }
-
+        // Displays products for browsing (3.3.9)
         public static List<Product> GetCatalogueProducts(AppDbContext context)
         {
             return context.Products

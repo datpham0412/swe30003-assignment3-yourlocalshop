@@ -120,6 +120,7 @@ namespace Assignment_3_SWE30003.Controllers
             }
         }
 
+        // Knows payment details (date of purchase, items, total amount paid, and customer details) (3.3.15)
         [HttpGet("{id}")]
         public async Task<IActionResult> GetPayment([FromQuery] string email, [FromQuery] string password, int id)
         {
@@ -229,7 +230,6 @@ namespace Assignment_3_SWE30003.Controllers
                 var invoice = Invoice.FromOrder(order);
                 _context.Invoices.Add(invoice);
 
-                // Create a shipment automatically after successful payment
                 var shipment = new Shipment
                 {
                     OrderId = order.Id,
@@ -264,7 +264,9 @@ namespace Assignment_3_SWE30003.Controllers
                 return StatusCode(500, $"An error occurred: {ex.Message}");
             }
         }
+        
 
+        // Knows payment details (date of purchase, items, total amount paid, and customer details) (3.3.15)
         [HttpGet("list")]
         public async Task<IActionResult> GetAllPayments([FromQuery] string email, [FromQuery] string password)
         {

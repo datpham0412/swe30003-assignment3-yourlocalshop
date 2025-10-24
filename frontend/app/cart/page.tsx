@@ -58,13 +58,6 @@ export default function CartPage() {
 
       if (response.ok) {
         const data = await response.json()
-        if (data.items.length === 0) {
-          toast.info("Cart is empty", {
-            description: "Please add items to your cart first.",
-          })
-          router.push("/catalogue")
-          return
-        }
         setCart(data)
       } else {
         toast.error("Failed to load cart", {
