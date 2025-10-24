@@ -32,6 +32,39 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+// --- Startup seeding: ensure an admin account exists ---
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<AppDbContext>();
+        // Ensure database is created (migrations are used in repo but ensure created as a safety)
+        context.Database.EnsureCreated();
+
+        // Check if admin exists
+        var adminEmail = "admin@gmail.com";
+        var existingAdmin = context.Accounts.FirstOrDefault(a => a.Email == adminEmail && a.Role == "Admin");
+        if (existingAdmin == null)
+        {
+            // Create admin account with provided password
+            var admin = new Assignment_3_SWE30003.Models.Account { Email = adminEmail, Password = "123456789", Role = "Admin", Name = "Admin" };
+            context.Accounts.Add(admin);
+            context.SaveChanges();
+            Console.WriteLine($"Seed: Admin account '{adminEmail}' created.");
+        }
+        else
+        {
+            Console.WriteLine($"Seed: Admin account '{adminEmail}' already exists.");
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error during seeding: {ex.Message}");
+    }
+}
+
+
 app.UseHttpsRedirection();
 
 app.UseCors("AllowLocalFrontend");
