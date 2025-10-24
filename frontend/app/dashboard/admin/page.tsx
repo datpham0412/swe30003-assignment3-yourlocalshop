@@ -2,7 +2,7 @@
 
 import type React from "react"
 import Link from "next/link"
-import { CreditCard, FileText, Truck, BarChart3, Package } from "lucide-react"
+import { CreditCard, FileText, Truck, BarChart3, Package, ChevronDown, Users, User } from "lucide-react"
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
@@ -24,6 +24,7 @@ import { LogOut } from "lucide-react"
 import AddProductForm from "@/components/admin/AddProductForm"
 import ProductList, { type Product } from "@/components/admin/ProductList"
 import CatalogueSpace from "@/components/admin/CatalogueSpace"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 interface Inventory {
   id: number
@@ -58,6 +59,15 @@ export default function AdminDashboard() {
   const [activeProduct, setActiveProduct] = useState<Product | null>(null)
 
   const [toast, setToast] = useState<{ type: "success" | "error"; text: string } | null>(null)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const [newName, setNewName] = useState("")
+  const [newEmail, setNewEmail] = useState("")
+  const [newPassword, setNewPassword] = useState("")
+  const [newPhone, setNewPhone] = useState("")
+  const [newRole, setNewRole] = useState<string | null>("Customer")
+  const [creatingUser, setCreatingUser] = useState(false)
+  const [createUserError, setCreateUserError] = useState<string | null>(null)
 
   useEffect(() => {
     const storedEmail = localStorage.getItem("email")
@@ -298,33 +308,30 @@ export default function AdminDashboard() {
               Your Local Shop — Admin Dashboard
             </h1>
             <nav className="flex items-center gap-2">
-              <Link href="/payments">
-                <Button variant="ghost" size="sm" className="hover:bg-purple-50">
-                  <CreditCard className="h-4 w-4 mr-2" />
-                  Payments
+              <div className="relative">
+                <Button variant="ghost" size="sm" className="flex items-center gap-2" onClick={() => setMenuOpen((s) => !s)}>
+                  Manage
+                  <ChevronDown className="h-4 w-4" />
                 </Button>
-              </Link>
-
-              <Link href="/orders/admin">
-                <Button variant="ghost" size="sm" className="hover:bg-purple-50">
-                  <Package className="h-4 w-4 mr-2" />
-                  Orders
-                </Button>
-              </Link>
-
-              <Link href="/invoices">
-                <Button variant="ghost" size="sm" className="hover:bg-purple-50">
-                  <FileText className="h-4 w-4 mr-2" />
-                  Invoices
-                </Button>
-              </Link>
-
-              <Link href="/shipments">
-                <Button variant="ghost" size="sm" className="hover:bg-purple-50">
-                  <Truck className="h-4 w-4 mr-2" />
-                  Shipments
-                </Button>
-              </Link>
+                {menuOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white border rounded-md shadow-lg z-50">
+                    <div className="flex flex-col">
+                      <Link href="/payments" className="px-3 py-2 hover:bg-gray-50 flex items-center gap-2">
+                        <CreditCard className="h-4 w-4" />Payments
+                      </Link>
+                      <Link href="/orders/admin" className="px-3 py-2 hover:bg-gray-50 flex items-center gap-2">
+                        <Package className="h-4 w-4" />Orders
+                      </Link>
+                      <Link href="/invoices" className="px-3 py-2 hover:bg-gray-50 flex items-center gap-2">
+                        <FileText className="h-4 w-4" />Invoices
+                      </Link>
+                      <Link href="/shipments" className="px-3 py-2 hover:bg-gray-50 flex items-center gap-2">
+                        <Truck className="h-4 w-4" />Shipments
+                      </Link>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               <Link href="/reports">
                 <Button variant="ghost" size="sm" className="hover:bg-purple-50">
@@ -332,6 +339,23 @@ export default function AdminDashboard() {
                   Reports
                 </Button>
               </Link>
+
+              <Link href="/dashboard/admin/account">
+                <Button variant="ghost" size="sm" className="hover:bg-purple-50">
+                  <User className="h-4 w-4 mr-2" />
+                  Account
+                </Button>
+              </Link>
+
+              <Button
+                onClick={() => setCreateDialogOpen(true)}
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-colors ml-2 bg-transparent"
+              >
+                <Users className="h-4 w-4" />
+                Create Users
+              </Button>
 
               <Button
                 onClick={handleLogout}
@@ -514,6 +538,172 @@ export default function AdminDashboard() {
                 )}
               </Button>
             </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Create User Dialog */}
+        <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Create New Account</DialogTitle>
+              <DialogDescription>Create a new customer or admin account</DialogDescription>
+            </DialogHeader>
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault()
+                if (!email || !password) {
+                  showToast("error", "Admin credentials missing. Refresh and try again.")
+                  return
+                }
+
+                setCreatingUser(true)
+                setCreateUserError(null)
+                // Sanitize Australian phone
+                const sanitizeAusPhone = (input: string) => {
+                  if (!input) return ""
+                  let digits = input.replace(/\D/g, "")
+                  if (digits.startsWith("61")) return "+" + digits
+                  if (digits.startsWith("0")) return "+61" + digits.slice(1)
+                  return digits
+                }
+
+                const phoneNormalized = sanitizeAusPhone(newPhone)
+                if (!phoneNormalized) {
+                  showToast("error", "Phone number is required and must be valid.")
+                  setCreatingUser(false)
+                  return
+                }
+
+                try {
+                  // If role is Customer, call public register endpoint
+                  let res: Response
+                  if (newRole === "Customer") {
+                    res = await fetch(`http://localhost:5074/api/Auth/register`, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ name: newName, email: newEmail, password: newPassword, phone: phoneNormalized }),
+                    })
+                  } else {
+                    // Admin creation endpoint (expects admin auth via query params)
+                    res = await fetch(
+                      `http://localhost:5074/api/Auth/createbyadmin?email=${encodeURIComponent(
+                        email,
+                      )}&password=${encodeURIComponent(password)}&newEmail=${encodeURIComponent(
+                        newEmail,
+                      )}&newPassword=${encodeURIComponent(newPassword)}&name=${encodeURIComponent(newName)}&role=${encodeURIComponent(
+                        newRole || "Admin",
+                      )}`,
+                      {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ phone: phoneNormalized }),
+                      },
+                    )
+                  }
+
+                  if (!res.ok) {
+                    // Try to parse JSON error first, fall back to text
+                    let text = "Failed to create user"
+                    try {
+                      const errJson = await res.json()
+                      text = errJson?.message ?? text
+                    } catch {
+                      const txt = await res.text()
+                      if (txt) text = txt
+                    }
+                    // show inline error in the dialog for immediate visibility
+                    setCreateUserError(text)
+                    // Do not show a toast for failure — inline message is sufficient
+                    setCreatingUser(false)
+                    return
+                  }
+
+                  // On success prefer structured JSON (backend returns { message, role })
+                  let successText = "Account created successfully"
+                  try {
+                    const data = await res.json()
+                    successText = data?.message ?? successText
+                  } catch {
+                    const txt = await res.text()
+                    if (txt) successText = txt
+                  }
+                  showToast("success", successText || "Account created successfully")
+                  setCreateDialogOpen(false)
+                  setNewName("")
+                  setNewEmail("")
+                  setNewPassword("")
+                  setNewRole("Customer")
+                  setCreateUserError(null)
+                } catch (err) {
+                  showToast("error", "Network error. Please try again.")
+                } finally {
+                  setCreatingUser(false)
+                }
+              }}
+              className="space-y-4"
+            >
+              <div className="space-y-2">
+                <Label htmlFor="name">Full name</Label>
+                <Input id="name" value={newName} onChange={(e) => setNewName(e.target.value)} required />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input id="email" type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} required />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="phone">Contact number (Australia)</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  placeholder="04xx xxx xxx or +61 4xx xxx xxx"
+                  value={newPhone}
+                  onChange={(e) => setNewPhone(e.target.value)}
+                  required
+                />
+
+              <div className="space-y-2">
+                <Label htmlFor="password">Default Password</Label>
+                <Input id="password" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required />
+              </div>
+              </div>
+
+              {createUserError && (
+                <div className="text-sm text-red-700 bg-red-50 border border-red-100 p-2 rounded">
+                  {createUserError}
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label>Role</Label>
+                <Select value={newRole || undefined} onValueChange={(v) => setNewRole(v)}>
+                  <SelectTrigger className="w-[160px] h-8 text-sm">
+                    <SelectValue placeholder="Customer" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Customer">Customer</SelectItem>
+                    <SelectItem value="Admin">Admin</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setCreateDialogOpen(false)} disabled={creatingUser}>
+                  Cancel
+                </Button>
+                <Button type="submit" className="bg-gradient-to-r from-purple-600 to-emerald-600" disabled={creatingUser}>
+                  {creatingUser ? (
+                    <span className="flex items-center gap-2">
+                      <Spinner className="h-4 w-4" />
+                      Creating...
+                    </span>
+                  ) : (
+                    "Create Account"
+                  )}
+                </Button>
+              </DialogFooter>
+            </form>
           </DialogContent>
         </Dialog>
 
