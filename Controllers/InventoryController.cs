@@ -25,8 +25,8 @@ namespace Assignment_3_SWE30003.Controllers
             if (admin == null)
                 return Unauthorized("Access denied. Only Admins can add inventory records.");
 
-            var adminAcc = new AdminAccount(_context);
-            var result = adminAcc.AddInventory(productId, quantity);
+            // Use Inventory static helper directly
+            var result = Inventory.AddInventory(_context, productId, quantity);
             return Ok(result);
         }
 
@@ -41,8 +41,8 @@ namespace Assignment_3_SWE30003.Controllers
             if (admin == null)
                 return Unauthorized("Access denied. Only Admins can update inventory records.");
 
-            var adminAcc = new AdminAccount(_context);
-            var result = adminAcc.UpdateInventory(productId, quantity);
+            // Use Inventory static helper directly
+            var result = Inventory.UpdateQuantity(_context, productId, quantity);
             return Ok(result);
         }
 
@@ -57,8 +57,8 @@ namespace Assignment_3_SWE30003.Controllers
             if (admin == null)
                 return Unauthorized("Access denied. Only Admins can delete inventory records.");
 
-            var adminAcc = new AdminAccount(_context);
-            var result = adminAcc.DeleteInventory(productId);
+            // Use Inventory static helper directly
+            var result = Inventory.DeleteInventory(_context, productId);
             return Ok(result);
         }
 
