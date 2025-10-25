@@ -51,3 +51,6 @@ launchSettings.json
 .localshop.db
 localshop.db-shm
 localshop.db-wal
+
+.claude
+v0-frontend-prompt.md
