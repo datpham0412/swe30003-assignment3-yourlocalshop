@@ -1,104 +1,92 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Spinner } from "@/components/ui/spinner"
-import {
-  LogOut,
-  Calendar,
-  TrendingUp,
-  DollarSign,
-  ShoppingBag,
-  Home,
-  Package,
-  CreditCard,
-  FileText,
-  Truck,
-  LayoutDashboard,
-  BarChart3,
-} from "lucide-react"
-import { toast } from "sonner"
-import Link from "next/link"
-import AdminNav from "@/components/admin/AdminNav"
+import AdminNav from "@/components/admin/AdminNav";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Spinner } from "@/components/ui/spinner";
+import { BarChart3, Calendar, DollarSign, ShoppingBag, TrendingUp } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 interface SalesReport {
-  period: string
-  totalOrders: number
-  totalRevenue: number
-  generatedAt: string
+  period: string;
+  totalOrders: number;
+  totalRevenue: number;
+  generatedAt: string;
 }
 
 export default function ReportsPage() {
-  const router = useRouter()
-  const [email, setEmail] = useState<string | null>(null)
-  const [password, setPassword] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [generatingReport, setGeneratingReport] = useState<string | null>(null)
-  const [report, setReport] = useState<SalesReport | null>(null)
+  const router = useRouter();
+  const [email, setEmail] = useState<string | null>(null);
+  const [password, setPassword] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [generatingReport, setGeneratingReport] = useState<string | null>(null);
+  const [report, setReport] = useState<SalesReport | null>(null);
 
   useEffect(() => {
-    const storedEmail = localStorage.getItem("email")
-    const storedPassword = localStorage.getItem("password")
-    const storedRole = localStorage.getItem("role")
+    const storedEmail = localStorage.getItem("email");
+    const storedPassword = localStorage.getItem("password");
+    const storedRole = localStorage.getItem("role");
 
     if (!storedEmail || !storedPassword || !storedRole) {
-      router.push("/auth")
-      return
+      router.push("/auth");
+      return;
     }
 
     if (storedRole !== "Admin") {
-      toast.error("Access denied", { description: "This page is for admins only." })
-      router.push("/catalogue")
-      return
+      toast.error("Access denied", { description: "This page is for admins only." });
+      router.push("/catalogue");
+      return;
     }
 
-    setEmail(storedEmail)
-    setPassword(storedPassword)
-    setLoading(false)
-  }, [router])
+    setEmail(storedEmail);
+    setPassword(storedPassword);
+    setLoading(false);
+  }, [router]);
 
   const generateReport = async (period: "Daily" | "Weekly" | "Monthly") => {
-    if (!email || !password) return
+    if (!email || !password) return;
 
-    setGeneratingReport(period)
-    setReport(null)
+    setGeneratingReport(period);
+    setReport(null);
 
     try {
       const response = await fetch(
-        `http://localhost:5074/api/Report/generate?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}&period=${period}`,
-        { method: "GET" },
-      )
+        `http://localhost:5074/api/SalesReport/generate?email=${encodeURIComponent(
+          email
+        )}&password=${encodeURIComponent(password)}&period=${period}`,
+        { method: "GET" }
+      );
 
       if (response.ok) {
-        const data: SalesReport = await response.json()
-        setReport(data)
+        const data: SalesReport = await response.json();
+        setReport(data);
         toast.success("Report generated successfully!", {
           description: `${period} sales report is ready.`,
-        })
+        });
       } else {
-        const errorText = await response.text()
-        toast.error("Failed to generate report", { description: errorText })
+        const errorText = await response.text();
+        toast.error("Failed to generate report", { description: errorText });
       }
     } catch (error) {
-      toast.error("Network error", { description: "Please check your connection." })
+      toast.error("Network error", { description: "Please check your connection." });
     } finally {
-      setGeneratingReport(null)
+      setGeneratingReport(null);
     }
-  }
+  };
 
   const handleLogout = () => {
-    localStorage.clear()
-    router.push("/auth")
-  }
+    localStorage.clear();
+    router.push("/auth");
+  };
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Spinner className="h-8 w-8 text-purple-600" />
       </div>
-    )
+    );
   }
 
   return (
@@ -110,7 +98,9 @@ export default function ReportsPage() {
           <h2 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-emerald-500 bg-clip-text text-transparent">
             Sales Reports
           </h2>
-          <p className="text-gray-600">Generate comprehensive sales reports for different time periods</p>
+          <p className="text-gray-600">
+            Generate comprehensive sales reports for different time periods
+          </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -199,7 +189,9 @@ export default function ReportsPage() {
               <CardTitle className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-emerald-500 bg-clip-text text-transparent">
                 {report.period} Sales Report
               </CardTitle>
-              <CardDescription>Generated on {new Date(report.generatedAt).toLocaleString()}</CardDescription>
+              <CardDescription>
+                Generated on {new Date(report.generatedAt).toLocaleString()}
+              </CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -213,7 +205,9 @@ export default function ReportsPage() {
                       <p className="text-3xl font-bold text-purple-600">{report.totalOrders}</p>
                     </div>
                   </div>
-                  <p className="text-xs text-gray-500 mt-2">Number of completed orders in this period</p>
+                  <p className="text-xs text-gray-500 mt-2">
+                    Number of completed orders in this period
+                  </p>
                 </div>
 
                 <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-lg p-6 border border-emerald-200">
@@ -223,10 +217,14 @@ export default function ReportsPage() {
                     </div>
                     <div>
                       <p className="text-sm text-gray-600 font-medium">Total Revenue</p>
-                      <p className="text-3xl font-bold text-emerald-600">${report.totalRevenue.toFixed(2)}</p>
+                      <p className="text-3xl font-bold text-emerald-600">
+                        ${report.totalRevenue.toFixed(2)}
+                      </p>
                     </div>
                   </div>
-                  <p className="text-xs text-gray-500 mt-2">Total revenue from paid and delivered orders</p>
+                  <p className="text-xs text-gray-500 mt-2">
+                    Total revenue from paid and delivered orders
+                  </p>
                 </div>
               </div>
 
@@ -251,5 +249,5 @@ export default function ReportsPage() {
         )}
       </main>
     </div>
-  )
+  );
 }

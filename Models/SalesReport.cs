@@ -1,5 +1,8 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace Assignment_3_SWE30003.Models
 {
+    // Type of periods for a report
     public enum ReportPeriod
     {
         Daily,
@@ -9,30 +12,35 @@ namespace Assignment_3_SWE30003.Models
 
     public class SalesReport
     {
-        public int Id { get; set; }
-        public ReportPeriod Period { get; set; }
+        public int Id { get; private set; }
+        public ReportPeriod Period { get; private set; }
+        public DateTime GeneratedAt { get; private set; }
         public int TotalOrders { get; private set; }
         public decimal TotalRevenue { get; private set; }
-        public DateTime GeneratedAt { get; private set; } = DateTime.UtcNow;
-        // Generate sales report for a period (daily, weekly, and monthly) (3.3.12)
-        public static SalesReport Generate(IEnumerable<Order> orders, ReportPeriod period)
-        {
-            var now = DateTime.UtcNow;
-            DateTime start = period switch
-            {
-                ReportPeriod.Daily => now.Date,
-                ReportPeriod.Weekly => now.AddDays(-7),
-                ReportPeriod.Monthly => now.AddMonths(-1),
-                _ => now.AddDays(-7)
-            };
 
-            var filtered = orders.Where(o => o.OrderDate >= start && o.OrderDate <= now);
-            return new SalesReport
-            {
-                Period = period,
-                TotalOrders = filtered.Count(),
-                TotalRevenue = filtered.Sum(o => o.Total)
-            };
+        [NotMapped]
+        public List<Order> Orders { get; private set; } = new();
+
+        // Generate the report with orders and calculate all the metrics
+        public void Generate(List<Order> orders, ReportPeriod period)
+        {
+            Orders = orders.ToList();
+            Period = period;
+            GeneratedAt = DateTime.UtcNow;
+            TotalOrders = CalculateTotalOrders();
+            TotalRevenue = CalculateTotalRevenue();
+        }
+
+        // Count how many orders are in this report
+        private int CalculateTotalOrders()
+        {
+            return Orders?.Count ?? 0;
+        }
+
+        // Sum up the total revenue from all orders in this report
+        private decimal CalculateTotalRevenue()
+        {
+            return Orders?.Sum(o => o.Total) ?? 0;
         }
     }
 }
