@@ -1,4 +1,5 @@
 using Assignment_3_SWE30003.Data;
+using Assignment_3_SWE30003.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 
@@ -15,6 +16,9 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite("Data Source=localshop.db"));
+
+// Register Catalogue as a scoped service (one instance per request)
+builder.Services.AddScoped<Catalogue>();
 
 builder.Services.AddCors(options =>
 {

@@ -9,17 +9,18 @@ namespace Assignment_3_SWE30003.Controllers
     public class CatalogueController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly Catalogue _catalogue;
 
-        public CatalogueController(AppDbContext context)
+        public CatalogueController(AppDbContext context, Catalogue catalogue)
         {
             _context = context;
+            _catalogue = catalogue;
         }
 
         [HttpGet("list")]
         public IActionResult DisplayCatalogue()
         {
-            var catalogue = new Catalogue(_context);
-            return Ok(catalogue.DisplayProducts());
+            return Ok(_catalogue.DisplayProducts());
         }
 
         [HttpPost("add")]
@@ -31,8 +32,7 @@ namespace Assignment_3_SWE30003.Controllers
             if (admin == null)
                 return Unauthorized("Access denied. Only Admins can manage the catalogue.");
 
-            // Use Product static helper directly
-            return Ok(Product.AddToCatalogue(_context, productId));
+            return Ok(_catalogue.AddProductToCatalogue(productId));
         }
 
         [HttpDelete("remove")]
@@ -44,8 +44,7 @@ namespace Assignment_3_SWE30003.Controllers
             if (admin == null)
                 return Unauthorized("Access denied. Only Admins can manage the catalogue.");
 
-            // Use Product static helper directly
-            return Ok(Product.RemoveFromCatalogue(_context, productId));
+            return Ok(_catalogue.RemoveProductFromCatalogue(productId));
         }
     }
 }
