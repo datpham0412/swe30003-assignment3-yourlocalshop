@@ -11,21 +11,26 @@ namespace Assignment_3_SWE30003.Controllers
         private readonly AppDbContext _context;
         private readonly Catalogue _catalogue;
 
+        // Inject database context and catalogue service for managing product listings
         public CatalogueController(AppDbContext context, Catalogue catalogue)
         {
             _context = context;
             _catalogue = catalogue;
         }
 
-        [HttpGet("list")]
-        public IActionResult DisplayCatalogue()
+        // Get all products currently available in the catalogue
+        [HttpGet("list-products")]
+        public IActionResult ListAllProductsInCatalogue()
         {
-            return Ok(_catalogue.DisplayProducts());
+            // TODO: Authorization
+            return Ok(_catalogue.GetCatalogueProducts());
         }
 
-        [HttpPost("add")]
-        public IActionResult AddToCatalogue(string email, string password, int productId)
+        // Add a product to the catalogue (admin only)
+        [HttpPost("add-product")]
+        public IActionResult AddProductToCatalogue(string email, string password, int productId)
         {
+            // Verify admin credentials before allowing catalogue modifications
             var admin = _context.Accounts.FirstOrDefault(a =>
                 a.Email == email && a.Password == password && a.Role == "Admin");
 
@@ -35,9 +40,11 @@ namespace Assignment_3_SWE30003.Controllers
             return Ok(_catalogue.AddProductToCatalogue(productId));
         }
 
-        [HttpDelete("remove")]
-        public IActionResult RemoveFromCatalogue(string email, string password, int productId)
+        // Remove a product from the catalogue (admin only)
+        [HttpDelete("remove-product")]
+        public IActionResult RemoveProductFromCatalogue(string email, string password, int productId)
         {
+            // Verify admin credentials before allowing catalogue modifications
             var admin = _context.Accounts.FirstOrDefault(a =>
                 a.Email == email && a.Password == password && a.Role == "Admin");
 

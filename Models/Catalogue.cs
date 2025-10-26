@@ -1,6 +1,4 @@
 using Assignment_3_SWE30003.Data;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Assignment_3_SWE30003.Models
 {
@@ -11,11 +9,6 @@ namespace Assignment_3_SWE30003.Models
         public Catalogue(AppDbContext context)
         {
             _context = context;
-        }
-        // Displays products for browsing
-        public List<Product> DisplayProducts()
-        {
-            return GetCatalogueProducts();
         }
 
         // Returns products that are marked as in the catalogue

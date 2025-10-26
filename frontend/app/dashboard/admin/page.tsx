@@ -102,8 +102,8 @@ export default function AdminDashboard() {
       // Fetch products, inventory, and catalogue in parallel
       const [productsRes, inventoryRes, catalogueRes] = await Promise.all([
         fetch("http://localhost:5074/api/Product/list"),
-        fetch("http://localhost:5074/api/Inventory/list"),
-        fetch("http://localhost:5074/api/Catalogue/list"),
+        fetch("http://localhost:5074/api/Inventory/list-products"),
+        fetch("http://localhost:5074/api/Catalogue/list-products"),
       ])
 
       if (!productsRes.ok) {
@@ -170,13 +170,13 @@ export default function AdminDashboard() {
       if (shouldBeInCatalogue) {
         // Add to catalogue
         response = await fetch(
-          `http://localhost:5074/api/Catalogue/add?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}&productId=${product.id}`,
+          `http://localhost:5074/api/Catalogue/add-product?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}&productId=${product.id}`,
           { method: "POST" },
         )
       } else {
         // Remove from catalogue
         response = await fetch(
-          `http://localhost:5074/api/Catalogue/remove?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}&productId=${product.id}`,
+          `http://localhost:5074/api/Catalogue/remove-product?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}&productId=${product.id}`,
           { method: "DELETE" },
         )
       }
@@ -220,13 +220,13 @@ export default function AdminDashboard() {
         if (editingProduct.inventoryId) {
           // Update existing inventory
           await fetch(
-            `http://localhost:5074/api/Inventory/update?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}&productId=${editingProduct.id}&quantity=${quantity}`,
+            `http://localhost:5074/api/Inventory/update-product?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}&productId=${editingProduct.id}&quantity=${quantity}`,
             { method: "PUT" },
           )
         } else {
           // Add new inventory
           await fetch(
-            `http://localhost:5074/api/Inventory/add?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}&productId=${editingProduct.id}&quantity=${quantity}`,
+            `http://localhost:5074/api/Inventory/add-product?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}&productId=${editingProduct.id}&quantity=${quantity}`,
             { method: "POST" },
           )
         }
