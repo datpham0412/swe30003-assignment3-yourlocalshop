@@ -53,7 +53,16 @@ namespace Assignment_3_SWE30003.Controllers
 
                 int availableQty = inventory?.Quantity ?? 0;
 
-                cart.AddItem(request.ProductId, request.Quantity, product, availableQty);
+                var cartItem = new CartItem
+                {
+                    ProductId = request.ProductId,
+                    ProductName = product.Name,
+                    UnitPrice = product.Price,
+                    Quantity = request.Quantity,
+                    ShoppingCartId = cart.Id
+                };
+
+                cart.AddItem(cartItem, availableQty);
                 cart.RecalculateTotals(TAX_RATE);
 
                 await _context.SaveChangesAsync();
@@ -109,7 +118,17 @@ namespace Assignment_3_SWE30003.Controllers
 
                 int availableQty = inventory?.Quantity ?? 0;
 
-                cart.UpdateItem(request.CartItemId, request.Quantity, product, availableQty);
+                var updatedItem = new CartItem
+                {
+                    Id = request.CartItemId,
+                    ProductId = cartItem.ProductId,
+                    ProductName = product.Name,
+                    UnitPrice = product.Price,
+                    Quantity = request.Quantity,
+                    ShoppingCartId = cart.Id
+                };
+
+                cart.UpdateItem(updatedItem, availableQty);
                 cart.RecalculateTotals(TAX_RATE);
 
                 await _context.SaveChangesAsync();
@@ -214,7 +233,7 @@ namespace Assignment_3_SWE30003.Controllers
                     Name = i.ProductName,
                     UnitPrice = i.UnitPrice,
                     Quantity = i.Quantity,
-                    Subtotal = i.Subtotal
+                    Subtotal = i.GetSubtotal()
                 }).ToList(),
                 Subtotal = cart.Subtotal,
                 Tax = cart.Tax,

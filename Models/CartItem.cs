@@ -8,6 +8,7 @@ namespace Assignment_3_SWE30003.Models
         public string ProductName { get; set; } = string.Empty;
         public decimal UnitPrice { get; set; }
         public int Quantity { get; set; }
-        public decimal Subtotal => UnitPrice * Quantity;
+        // Calculates subtotal for the cart item
+        public decimal GetSubtotal() => UnitPrice * Quantity;
     }
 }
