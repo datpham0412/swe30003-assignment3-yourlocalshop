@@ -53,7 +53,7 @@ namespace Assignment_3_SWE30003.Models
                     ProductName = item.ProductName,
                     UnitPrice = item.UnitPrice,
                     Quantity = item.Quantity,
-                    LineTotal = item.Subtotal
+                    LineTotal = item.GetSubtotal()
                 };
                 order.Lines.Add(orderLine);
             }

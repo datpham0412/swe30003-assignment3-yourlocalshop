@@ -9,56 +9,48 @@ namespace Assignment_3_SWE30003.Models
         public decimal Tax { get; private set; }
         public decimal Total { get; private set; }
 
-        // Edits items in the cart (3.3.7)
-        public void AddItem(int productId, int quantity, Product product, int availableQty)
+        // Accept a pre-initialized CartItem (created by ShoppingCartController).
+        // Manage shopping cart items
+        public void AddItem(CartItem newItem, int availableQty)
         {
             if (availableQty == 0)
             {
                 throw new InvalidOperationException("Product is out of stock.");
             }
 
-            int finalQuantity = Math.Min(quantity, availableQty);
+            int finalQuantity = Math.Min(newItem.Quantity, availableQty);
 
-            var existingItem = Items.FirstOrDefault(i => i.ProductId == productId);
+            var existingItem = Items.FirstOrDefault(i => i.ProductId == newItem.ProductId);
             if (existingItem != null)
             {
                 existingItem.Quantity = Math.Min(existingItem.Quantity + finalQuantity, availableQty);
             }
             else
             {
-                var cartItem = new CartItem
-                {
-                    ProductId = productId,
-                    ProductName = product.Name,
-                    UnitPrice = product.Price,
-                    Quantity = finalQuantity,
-                    ShoppingCartId = this.Id
-                };
-                Items.Add(cartItem);
+                newItem.Quantity = finalQuantity;
+                newItem.ShoppingCartId = this.Id;
+                Items.Add(newItem);
             }
         }
-        // Edits items in the cart (3.3.7)
-        public void UpdateItem(int cartItemId, int quantity, Product product, int availableQty)
+        public void UpdateItem(CartItem updatedItem, int availableQty)
         {
             if (availableQty == 0)
             {
                 throw new InvalidOperationException("Product is out of stock.");
             }
 
-            var item = Items.FirstOrDefault(i => i.Id == cartItemId);
+            var item = Items.FirstOrDefault(i => i.Id == updatedItem.Id);
             if (item == null)
             {
                 throw new InvalidOperationException("Cart item not found.");
             }
 
-            int finalQuantity = Math.Min(quantity, availableQty);
+            int finalQuantity = Math.Min(updatedItem.Quantity, availableQty);
             item.Quantity = finalQuantity;
 
-            item.UnitPrice = product.Price;
-            item.ProductName = product.Name;
+            item.UnitPrice = updatedItem.UnitPrice;
+            item.ProductName = updatedItem.ProductName;
         }
-
-        // Edits items in the cart (3.3.7)
         public void RemoveItem(int cartItemId)
         {
             var item = Items.FirstOrDefault(i => i.Id == cartItemId);
@@ -69,14 +61,16 @@ namespace Assignment_3_SWE30003.Models
 
             Items.Remove(item);
         }
-        // Calculates taxes, and total price (3.3.7)
+        // --------------------------------------------------------------------------------
+        // Calculates taxes, and total price
         public void RecalculateTotals(decimal taxRate)
         {
-            Subtotal = Items.Sum(i => i.Subtotal);
+            Subtotal = Items.Sum(i => i.GetSubtotal());
             Tax = Subtotal * taxRate;
             Total = Subtotal + Tax;
         }
 
+        // Create order for checkout
         public Order CreateOrderFromSnapshot(int customerId)
         {
             var order = Order.FromCart(this);
@@ -84,6 +78,7 @@ namespace Assignment_3_SWE30003.Models
             return order;
         }
 
+        // Clear cart items
         public void Clear()
         {
             var itemsToRemove = Items.ToList();
