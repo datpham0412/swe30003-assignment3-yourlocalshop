@@ -54,7 +54,6 @@ export default function InvoicesPage() {
   const [dataLoading, setDataLoading] = useState(false)
   const [selectedInvoice, setSelectedInvoice] = useState<InvoiceDetails | null>(null)
   const [detailsLoading, setDetailsLoading] = useState(false)
-  const [generatingInvoiceId, setGeneratingInvoiceId] = useState<number | null>(null)
 
   useEffect(() => {
     const storedEmail = localStorage.getItem("email")
@@ -117,30 +116,6 @@ export default function InvoicesPage() {
       toast.error("Network error", { description: "Please check your connection." })
     } finally {
       setDetailsLoading(false)
-    }
-  }
-
-  const handleGenerateInvoice = async (orderId: number) => {
-    if (!email || !password) return
-
-    setGeneratingInvoiceId(orderId)
-    try {
-      const response = await fetch(
-        `http://localhost:5074/api/Invoice/generate/${orderId}?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`,
-        { method: "POST" },
-      )
-
-      if (response.ok) {
-        toast.success("Invoice generated successfully!")
-        fetchInvoices(email, password)
-      } else {
-        const errorText = await response.text()
-        toast.error("Failed to generate invoice", { description: errorText })
-      }
-    } catch (error) {
-      toast.error("Network error", { description: "Please check your connection." })
-    } finally {
-      setGeneratingInvoiceId(null)
     }
   }
 

@@ -135,14 +135,16 @@ export default function OrdersPage() {
     router.push("/auth")
   }
 
-  const handleProcessPayment = async (orderId: number) => {
+    const handleProcessPayment = async (orderId: number) => {
     if (!email || !password) return
 
     setProcessingOrderId(orderId)
     try {
       const response = await fetch(
-        `http://localhost:5074/api/Payment/admin/process/${orderId}?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`,
-        { method: "POST" }
+        `http://localhost:5074/api/Order/${orderId}/admin-pay?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`,
+        {
+          method: "POST",
+        },
       )
 
       if (response.ok) {

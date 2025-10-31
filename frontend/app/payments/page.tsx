@@ -75,7 +75,7 @@ export default function PaymentsPage() {
     setDataLoading(true)
     try {
       const response = await fetch(
-        `http://localhost:5074/api/Payment/list?email=${encodeURIComponent(userEmail)}&password=${encodeURIComponent(userPassword)}`,
+        `http://localhost:5074/api/Order/payments?email=${encodeURIComponent(userEmail)}&password=${encodeURIComponent(userPassword)}`,
       )
 
       if (response.ok) {
@@ -98,7 +98,7 @@ export default function PaymentsPage() {
     setDetailsLoading(true)
     try {
       const response = await fetch(
-        `http://localhost:5074/api/Payment/${paymentId}?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`,
+        `http://localhost:5074/api/Order/${paymentId}/payment?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`,
       )
 
       if (response.ok) {
@@ -120,7 +120,7 @@ export default function PaymentsPage() {
     setProcessingPaymentId(orderId)
     try {
       const response = await fetch(
-        `http://localhost:5074/api/Payment/process/${orderId}?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`,
+        `http://localhost:5074/api/Order/${orderId}/pay?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`,
         { method: "POST" },
       )
 
@@ -230,7 +230,7 @@ export default function PaymentsPage() {
                           <Button variant="outline" size="sm" onClick={() => fetchPaymentDetails(payment.paymentId)}>
                             View Details
                           </Button>
-                          {payment.status.toLowerCase() === "pendingpayment" && (
+                          {payment.status.toLowerCase() === "pending" && (
                             <Button
                               variant="default"
                               size="sm"
