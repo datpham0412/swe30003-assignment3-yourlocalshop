@@ -3,22 +3,43 @@ namespace Assignment_3_SWE30003.Models
     public class Invoice
     {
         public int Id { get; set; }
-        public int OrderId { get; set; }
+        public int PaymentId { get; set; }
         public string InvoiceNumber { get; set; } = string.Empty;
         public decimal Amount { get; set; }
         public DateTime IssueDate { get; set; } = DateTime.UtcNow;
-        public Order Order { get; set; } = default!;
+        public Payment Payment { get; set; } = default!;
 
-        // Knows invoice details (invoice number, store information) (3.3.15)
-        public static Invoice FromOrder(Order order)
+        // Parameterless constructor for EF Core
+        public Invoice() { }
+
+        // Constructor with payment details
+        public Invoice(Payment payment)
         {
-            return new Invoice
+            if (payment == null)
             {
-                OrderId = order.Id,
-                InvoiceNumber = $"INV-{order.Id}-{DateTime.UtcNow:yyyyMMddHHmmss}",
-                Amount = order.Total,
-                IssueDate = DateTime.UtcNow
-            };
+                throw new ArgumentNullException(nameof(payment), "Payment cannot be null.");
+            }
+
+            if (payment.Id == 0)
+            {
+                throw new InvalidOperationException("Payment must be saved to database before generating invoice.");
+            }
+
+            Payment = payment;
+            PaymentId = payment.Id;
+        }
+
+        // Generates invoice content
+        public void Generate()
+        {
+            if (Payment == null)
+            {
+                throw new InvalidOperationException("Payment must be set before generating invoice.");
+            }
+
+            InvoiceNumber = $"INV-{Payment.OrderId}-{DateTime.UtcNow:yyyyMMddHHmmss}";
+            Amount = Payment.Amount;
+            IssueDate = DateTime.UtcNow;
         }
     }
 }

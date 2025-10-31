@@ -86,18 +86,29 @@ export default function PaymentProcessPage() {
     const email = localStorage.getItem("email")
     const password = localStorage.getItem("password")
 
-    if (!email || !password) return
+    if (!email || !password) {
+      toast.error("Authentication required", {
+        description: "Please log in again.",
+      })
+      return
+    }
 
     setProcessing(true)
     try {
+      console.log("Starting payment for order:", orderId)
       const response = await fetch(
-        `http://localhost:5074/api/Payment/process/${orderId}?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`,
+        `http://localhost:5074/api/Order/${orderId}/pay?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`,
         {
           method: "POST",
         },
       )
 
+      console.log("Response status:", response.status)
+      
       if (response.ok) {
+        const data = await response.json()
+        console.log("Payment response:", data)
+        
         toast.success("Payment successful!", {
           description: "Invoice generated. Redirecting...",
           icon: <CheckCircle className="h-5 w-5" />,
@@ -107,11 +118,13 @@ export default function PaymentProcessPage() {
         }, 1500)
       } else {
         const errorText = await response.text()
+        console.error("Payment error:", errorText)
         toast.error("Payment failed", {
           description: errorText || "Please try again later.",
         })
       }
     } catch (error) {
+      console.error("Payment network error:", error)
       toast.error("Network error", {
         description: "Unable to process payment.",
       })

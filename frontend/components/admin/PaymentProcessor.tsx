@@ -27,7 +27,7 @@ export default function PaymentProcessor({
     setProcessing(true)
     try {
       const response = await fetch(
-        `http://localhost:5074/api/Payment/admin/process/${orderId}?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`,
+        `http://localhost:5074/api/Order/${orderId}/admin-pay?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`,
         { method: "POST" },
       )
 

@@ -70,9 +70,9 @@ namespace Assignment_3_SWE30003.Data
                 .HasConversion<string>();
 
             modelBuilder.Entity<Invoice>()
-                .HasOne(i => i.Order)
-                .WithOne()
-                .HasForeignKey<Invoice>(i => i.OrderId)
+                .HasOne(i => i.Payment)
+                .WithOne(p => p.Invoice)
+                .HasForeignKey<Invoice>(i => i.PaymentId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<Shipment>()

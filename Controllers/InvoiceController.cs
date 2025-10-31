@@ -17,7 +17,7 @@ namespace Assignment_3_SWE30003.Controllers
         }
 
         [HttpGet("{orderId}")]
-        public async Task<IActionResult> GetInvoiceByOrderId([FromQuery] string email, [FromQuery] string password, int orderId)
+        public async Task<IActionResult> GetInvoiceForOrder([FromQuery] string email, [FromQuery] string password, int orderId)
         {
             try
             {
@@ -30,33 +30,30 @@ namespace Assignment_3_SWE30003.Controllers
                 }
 
                 var invoice = await _context.Invoices
-                    .Include(i => i.Order)
+                    .Include(i => i.Payment)
+                    .ThenInclude(p => p.Order)
                     .ThenInclude(o => o.Lines)
-                    .FirstOrDefaultAsync(i => i.OrderId == orderId);
+                    .FirstOrDefaultAsync(i => i.Payment.OrderId == orderId);
 
                 if (invoice == null)
                 {
                     return NotFound("Invoice not found for this order.");
                 }
 
-                if (user.Role == "Customer" && invoice.Order.CustomerId != user.Id)
+                if (user.Role == "Customer" && invoice.Payment.Order.CustomerId != user.Id)
                 {
                     return Unauthorized("You are not authorized to view this invoice.");
                 }
-
-                // Get payment method
-                var payment = await _context.Payments
-                    .FirstOrDefaultAsync(p => p.OrderId == orderId);
 
                 return Ok(new
                 {
                     invoiceId = invoice.Id,
                     invoiceNumber = invoice.InvoiceNumber,
-                    orderId = invoice.OrderId,
+                    orderId = invoice.Payment.OrderId,
                     amount = invoice.Amount,
                     issueDate = invoice.IssueDate,
-                    paymentMethod = payment?.Method ?? "Unknown",
-                    lines = invoice.Order.Lines.Select(l => new
+                    paymentMethod = invoice.Payment.Method,
+                    lines = invoice.Payment.Order.Lines.Select(l => new
                     {
                         productId = l.ProductId,
                         name = l.ProductName,
@@ -64,9 +61,9 @@ namespace Assignment_3_SWE30003.Controllers
                         quantity = l.Quantity,
                         lineTotal = l.LineTotal
                     }).ToList(),
-                    subtotal = invoice.Order.Subtotal,
-                    tax = invoice.Order.Tax,
-                    total = invoice.Order.Total
+                    subtotal = invoice.Payment.Order.Subtotal,
+                    tax = invoice.Payment.Order.Tax,
+                    total = invoice.Payment.Order.Total
                 });
             }
             catch (Exception ex)
@@ -89,7 +86,8 @@ namespace Assignment_3_SWE30003.Controllers
                 }
 
                 var invoices = await _context.Invoices
-                    .Include(i => i.Order)
+                    .Include(i => i.Payment)
+                    .ThenInclude(p => p.Order)
                     .OrderByDescending(i => i.IssueDate)
                     .ToListAsync();
 
@@ -97,64 +95,14 @@ namespace Assignment_3_SWE30003.Controllers
                 {
                     invoiceId = i.Id,
                     invoiceNumber = i.InvoiceNumber,
-                    orderId = i.OrderId,
-                    customerId = i.Order.CustomerId,
+                    orderId = i.Payment.OrderId,
+                    customerId = i.Payment.Order.CustomerId,
                     amount = i.Amount,
                     issueDate = i.IssueDate,
-                    orderStatus = i.Order.Status.ToString()
+                    orderStatus = i.Payment.Order.Status.ToString()
                 }).ToList();
 
                 return Ok(invoiceList);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"An error occurred: {ex.Message}");
-            }
-        }
-        // Generate Invoice (3.3.15)
-        [HttpPost("generate/{orderId}")]
-        public async Task<IActionResult> GenerateInvoice([FromQuery] string email, [FromQuery] string password, int orderId)
-        {
-            try
-            {
-                var admin = await _context.Accounts
-                    .FirstOrDefaultAsync(a => a.Email == email && a.Password == password && a.Role == "Admin");
-
-                if (admin == null)
-                {
-                    return Unauthorized("Invalid credentials or not an admin account.");
-                }
-
-                var order = await _context.Orders
-                    .Include(o => o.Lines)
-                    .FirstOrDefaultAsync(o => o.Id == orderId);
-
-                if (order == null)
-                {
-                    return NotFound("Order not found.");
-                }
-
-                var existingInvoice = await _context.Invoices
-                    .FirstOrDefaultAsync(i => i.OrderId == orderId);
-
-                if (existingInvoice != null)
-                {
-                    return BadRequest("Invoice already exists for this order.");
-                }
-
-                var invoice = Invoice.FromOrder(order);
-                _context.Invoices.Add(invoice);
-                await _context.SaveChangesAsync();
-
-                return Ok(new
-                {
-                    invoiceId = invoice.Id,
-                    invoiceNumber = invoice.InvoiceNumber,
-                    orderId = invoice.OrderId,
-                    amount = invoice.Amount,
-                    issueDate = invoice.IssueDate,
-                    message = "Invoice generated successfully."
-                });
             }
             catch (Exception ex)
             {

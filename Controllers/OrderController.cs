@@ -259,6 +259,290 @@ namespace Assignment_3_SWE30003.Controllers
             }
         }
 
+        // Customer pays for their order
+        [HttpPost("{orderId}/pay")]
+        public async Task<IActionResult> PayForOrder([FromQuery] string email, [FromQuery] string password, int orderId)
+        {
+            try
+            {
+                var customer = await _context.Accounts
+                    .FirstOrDefaultAsync(a => a.Email == email && a.Password == password && a.Role == "Customer");
+
+                if (customer == null)
+                {
+                    return Unauthorized("Invalid credentials or not a customer account.");
+                }
+
+                // Load order with its lines for payment processing
+                var order = await _context.Orders
+                    .Include(o => o.Lines)
+                    .FirstOrDefaultAsync(o => o.Id == orderId);
+
+                if (order == null)
+                {
+                    return NotFound("Order not found.");
+                }
+
+                if (order.CustomerId != customer.Id)
+                {
+                    return Unauthorized("You are not authorized to pay for this order.");
+                }
+
+                var existingPayment = await _context.Payments
+                    .FirstOrDefaultAsync(p => p.OrderId == orderId);
+
+                if (existingPayment != null)
+                {
+                    return BadRequest("Payment already exists for this order.");
+                }
+
+                // Payment constructor validates order status and takes ownership of order
+                var payment = new Payment(order);
+
+                _context.Payments.Add(payment);
+
+                payment.ProcessPayment((productId, quantity) =>
+                {
+                    var inventory = _context.Inventories.FirstOrDefault(i => i.ProductId == productId);
+                    if (inventory != null)
+                    {
+                        if (inventory.Quantity < quantity)
+                        {
+                            throw new InvalidOperationException($"Insufficient stock for product ID {productId}. Available: {inventory.Quantity}, Required: {quantity}");
+                        }
+                        inventory.Quantity -= quantity;
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException($"Inventory not found for product ID {productId}");
+                    }
+                });
+
+                var shipment = new Shipment
+                {
+                    OrderId = payment.Order.Id,
+                    Address = payment.Order.ShipmentAddress ?? "Default Address",
+                    ContactName = payment.Order.ContactName ?? "Customer",
+                    TrackingNumber = $"TRK-{Guid.NewGuid().ToString().Substring(0, 8)}"
+                };
+                _context.Shipments.Add(shipment);
+
+                // Save payment first to get PaymentId
+                await _context.SaveChangesAsync();
+
+                // Generate invoice after payment has Id
+                payment.GenerateInvoice();
+                if (payment.Invoice != null)
+                {
+                    _context.Invoices.Add(payment.Invoice);
+                    await _context.SaveChangesAsync();
+                }
+
+                return Ok(new
+                {
+                    paymentId = payment.Id,
+                    orderId = payment.Order.Id,
+                    paymentStatus = payment.Status.ToString(),
+                    paymentAmount = payment.Amount,
+                    paymentDate = payment.PaymentDate,
+                    orderStatus = payment.Order.Status.ToString(),
+                    invoiceId = payment.Invoice?.Id,
+                    invoiceNumber = payment.Invoice?.InvoiceNumber,
+                    message = "Payment processed successfully. Invoice generated."
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
+        }
+
+        // Admin processes payment on behalf of customer
+        [HttpPost("{orderId}/admin-pay")]
+        public async Task<IActionResult> AdminPayForOrder([FromQuery] string email, [FromQuery] string password, int orderId)
+        {
+            try
+            {
+                var admin = await _context.Accounts
+                    .FirstOrDefaultAsync(a => a.Email == email && a.Password == password && a.Role == "Admin");
+
+                if (admin == null)
+                {
+                    return Unauthorized("Invalid credentials or not an admin account.");
+                }
+
+                var order = await _context.Orders
+                    .Include(o => o.Lines)
+                    .FirstOrDefaultAsync(o => o.Id == orderId);
+
+                if (order == null)
+                {
+                    return NotFound("Order not found.");
+                }
+
+                var existingPayment = await _context.Payments
+                    .FirstOrDefaultAsync(p => p.OrderId == orderId);
+
+                if (existingPayment != null)
+                {
+                    return BadRequest("Payment already exists for this order.");
+                }
+
+                // Payment constructor validates order status and takes ownership of order
+                var payment = new Payment(order)
+                {
+                    Method = "Admin Processed"
+                };
+
+                _context.Payments.Add(payment);
+
+                payment.ProcessPayment((productId, quantity) =>
+                {
+                    var inventory = _context.Inventories.FirstOrDefault(i => i.ProductId == productId);
+                    if (inventory != null)
+                    {
+                        if (inventory.Quantity < quantity)
+                        {
+                            throw new InvalidOperationException($"Insufficient stock for product ID {productId}. Available: {inventory.Quantity}, Required: {quantity}");
+                        }
+                        inventory.Quantity -= quantity;
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException($"Inventory not found for product ID {productId}");
+                    }
+                });
+
+                var shipment = new Shipment
+                {
+                    OrderId = payment.Order.Id,
+                    Address = payment.Order.ShipmentAddress ?? "Default Address",
+                    ContactName = payment.Order.ContactName ?? "Customer",
+                    TrackingNumber = $"TRK-{Guid.NewGuid().ToString().Substring(0, 8)}"
+                };
+                _context.Shipments.Add(shipment);
+
+                // Save payment first to get PaymentId
+                await _context.SaveChangesAsync();
+
+                // Generate invoice after payment has Id
+                payment.GenerateInvoice();
+                if (payment.Invoice != null)
+                {
+                    _context.Invoices.Add(payment.Invoice);
+                    await _context.SaveChangesAsync();
+                }
+
+                return Ok(new
+                {
+                    paymentId = payment.Id,
+                    orderId = payment.Order.Id,
+                    paymentStatus = payment.Status.ToString(),
+                    paymentAmount = payment.Amount,
+                    paymentDate = payment.PaymentDate,
+                    orderStatus = payment.Order.Status.ToString(),
+                    invoiceId = payment.Invoice?.Id,
+                    invoiceNumber = payment.Invoice?.InvoiceNumber,
+                    shipmentId = shipment.Id,
+                    message = "Payment processed successfully by admin. Invoice and shipment generated."
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
+        }
+
+        // Get payment details for an order
+        [HttpGet("{orderId}/payment")]
+        public async Task<IActionResult> GetOrderPayment([FromQuery] string email, [FromQuery] string password, int orderId)
+        {
+            try
+            {
+                var user = await _context.Accounts
+                    .FirstOrDefaultAsync(a => a.Email == email && a.Password == password);
+
+                if (user == null)
+                {
+                    return Unauthorized("Invalid credentials.");
+                }
+
+                var payment = await _context.Payments
+                    .Include(p => p.Order)
+                    .FirstOrDefaultAsync(p => p.OrderId == orderId);
+
+                if (payment == null)
+                {
+                    return NotFound("Payment not found for this order.");
+                }
+
+                if (user.Role == "Customer" && payment.Order.CustomerId != user.Id)
+                {
+                    return Unauthorized("You are not authorized to view this payment.");
+                }
+
+                return Ok(new
+                {
+                    paymentId = payment.Id,
+                    orderId = payment.OrderId,
+                    method = payment.Method,
+                    amount = payment.Amount,
+                    status = payment.Status.ToString(),
+                    paymentDate = payment.PaymentDate
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
+        }
+
+        // Admin gets all payments
+        [HttpGet("payments")]
+        public async Task<IActionResult> GetAllPayments([FromQuery] string email, [FromQuery] string password)
+        {
+            try
+            {
+                var admin = await _context.Accounts
+                    .FirstOrDefaultAsync(a => a.Email == email && a.Password == password && a.Role == "Admin");
+
+                if (admin == null)
+                {
+                    return Unauthorized("Invalid credentials or not an admin account.");
+                }
+
+                var payments = await _context.Payments
+                    .Include(p => p.Order)
+                    .OrderByDescending(p => p.PaymentDate)
+                    .ToListAsync();
+
+                var paymentList = payments.Select(p => new
+                {
+                    paymentId = p.Id,
+                    orderId = p.OrderId,
+                    customerId = p.Order.CustomerId,
+                    method = p.Method,
+                    amount = p.Amount,
+                    status = p.Status.ToString(),
+                    paymentDate = p.PaymentDate
+                }).ToList();
+
+                return Ok(paymentList);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
+        }
+
         private OrderResponse MapToOrderResponse(Order order)
         {
             return new OrderResponse
