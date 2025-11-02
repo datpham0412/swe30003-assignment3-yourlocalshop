@@ -23,7 +23,7 @@ namespace Assignment_3_SWE30003.Controllers
         public IActionResult ListAllProductsInCatalogue()
         {
             // TODO: Authorization
-            return Ok(_catalogue.GetCatalogueProducts());
+            return Ok(_catalogue.GetProducts());
         }
 
         // Add a product to the catalogue (requires admin authentication)

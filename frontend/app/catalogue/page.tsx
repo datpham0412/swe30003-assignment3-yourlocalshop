@@ -38,7 +38,7 @@ export default function CataloguePage() {
   const fetchCatalogue = async () => {
     setLoading(true)
     try {
-      const response = await fetch("http://localhost:5074/api/Catalogue/list")
+      const response = await fetch("http://localhost:5074/api/Catalogue/list-products")
 
       if (response.ok) {
         const data: CatalogueProduct[] = await response.json()

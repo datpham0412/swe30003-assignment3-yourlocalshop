@@ -13,7 +13,7 @@ namespace Assignment_3_SWE30003.Models
         }
 
         // Retrieve all products that are currently listed in the catalogue
-        public List<Product> GetCatalogueProducts()
+        public List<Product> GetProducts()
         {
             return _context.Products
                 .Where(p => p.IsInCatalogue)
