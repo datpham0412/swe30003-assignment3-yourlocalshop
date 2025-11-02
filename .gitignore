@@ -54,3 +54,4 @@ localshop.db-wal
 
 .claude
 v0-frontend-prompt.md
+*.puml
