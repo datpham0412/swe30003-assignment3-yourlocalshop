@@ -1,7 +1,5 @@
 # Introduction
 
-# Installation and User Manual
-
 # Development
 
 Guide for developers of the system
@@ -38,7 +36,21 @@ npm run lint
 
 ## Backend (Dotnet)
 
-1. (Optional) Create launchSettings in `Properties` folder
+1. (Optional if you have not had launchSettings) Create launchSettings in `Properties` folder
+```
+{
+  "profiles": {
+    "Assignment_3_SWE30003": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "applicationUrl": "http://localhost:5074",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}
+```
 
 2. Run backend
 
@@ -60,4 +72,10 @@ Sync migrations
 
 ```
 dotnet ef database update
+```
+
+Add new migration
+
+```
+dotnet ef migrations add <MigrationName>
 ```

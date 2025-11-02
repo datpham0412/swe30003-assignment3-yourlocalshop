@@ -20,12 +20,6 @@ namespace Assignment_3_SWE30003.Models
 
         public Order Order { get; set; } = default!;
 
-        public Shipment(Order order)
-        {
-            Order = order;
-            OrderId = order.Id;
-        }
-
         // Update shipment details (status, delivery date)
         public void UpdateStatus(ShipmentStatus newStatus, DateTime? deliveryDate = null)
         {

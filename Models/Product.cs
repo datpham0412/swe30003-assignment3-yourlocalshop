@@ -1,9 +1,9 @@
 using Assignment_3_SWE30003.Data;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
 
 namespace Assignment_3_SWE30003.Models
 {
+    // Represents a product with its name, category, price, and catalogue availability status
     public class Product
     {
         [Key]
@@ -11,18 +11,9 @@ namespace Assignment_3_SWE30003.Models
         public string Name { get; set; } = string.Empty;
         public string Category { get; set; } = string.Empty;
         public decimal Price { get; set; }
-        public bool IsInCatalogue { get; set; } = false; 
-        public Inventory? Inventory { get; set; }
-        // Edit product details
-        public string AddToDatabase(AppDbContext context)
-        {
-            if (string.IsNullOrWhiteSpace(Name))
-                return "Product name is required.";
+        public bool IsInCatalogue { get; set; } = false;
 
-            context.Products.Add(this);
-            context.SaveChanges();
-            return $"Product '{Name}' added successfully!";
-        }
+        // Update one or more properties of an existing product
         public static string UpdateProduct(
             AppDbContext context,
             int id,
@@ -30,29 +21,36 @@ namespace Assignment_3_SWE30003.Models
             string? category = null,
             decimal? price = null)
         {
+            // Find product in database
             var product = context.Products.FirstOrDefault(p => p.Id == id);
             if (product == null)
                 return "Product not found.";
 
+            // Update provided fields
             if (!string.IsNullOrWhiteSpace(name)) product.Name = name;
             if (!string.IsNullOrWhiteSpace(category)) product.Category = category;
             if (price.HasValue) product.Price = price.Value;
 
+            // Save changes
             context.SaveChanges();
             return $"Product '{product.Name}' updated successfully!";
         }
+
+        // Remove a product from the database by its ID
         public static string DeleteProduct(AppDbContext context, int id)
         {
+            // Find product in database
             var product = context.Products.FirstOrDefault(p => p.Id == id);
             if (product == null)
                 return "Product not found.";
 
+            // Delete product
             context.Products.Remove(product);
             context.SaveChanges();
             return $"Product '{product.Name}' deleted successfully!";
         }
-        // ------------------------------------------------------------------------
-        // Knows product details (name, description, price, category)
+
+        // Retrieve all products from the database
         public static List<Product> GetAllProducts(AppDbContext context)
         {
             return context.Products.ToList();

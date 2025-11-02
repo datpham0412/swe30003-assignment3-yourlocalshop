@@ -3,6 +3,7 @@ using System;
 using Assignment_3_SWE30003.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Assignment_3_SWE30003.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251102060852_ReplaceInventoryWithInventoryProduct")]
+    partial class ReplaceInventoryWithInventoryProduct
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.10");
@@ -49,7 +52,7 @@ namespace Assignment_3_SWE30003.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Accounts", (string)null);
+                    b.ToTable("Accounts");
                 });
 
             modelBuilder.Entity("Assignment_3_SWE30003.Models.CartItem", b =>
@@ -80,7 +83,7 @@ namespace Assignment_3_SWE30003.Migrations
 
                     b.HasIndex("ShoppingCartId");
 
-                    b.ToTable("CartItems", (string)null);
+                    b.ToTable("CartItems");
                 });
 
             modelBuilder.Entity("Assignment_3_SWE30003.Models.InventoryProduct", b =>
@@ -100,7 +103,7 @@ namespace Assignment_3_SWE30003.Migrations
                     b.HasIndex("ProductId")
                         .IsUnique();
 
-                    b.ToTable("InventoryProducts", (string)null);
+                    b.ToTable("InventoryProducts");
                 });
 
             modelBuilder.Entity("Assignment_3_SWE30003.Models.Invoice", b =>
@@ -127,7 +130,7 @@ namespace Assignment_3_SWE30003.Migrations
                     b.HasIndex("OrderId")
                         .IsUnique();
 
-                    b.ToTable("Invoices", (string)null);
+                    b.ToTable("Invoices");
                 });
 
             modelBuilder.Entity("Assignment_3_SWE30003.Models.Order", b =>
@@ -169,7 +172,7 @@ namespace Assignment_3_SWE30003.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Orders", (string)null);
+                    b.ToTable("Orders");
                 });
 
             modelBuilder.Entity("Assignment_3_SWE30003.Models.OrderLine", b =>
@@ -201,7 +204,7 @@ namespace Assignment_3_SWE30003.Migrations
 
                     b.HasIndex("OrderId");
 
-                    b.ToTable("OrderLines", (string)null);
+                    b.ToTable("OrderLines");
                 });
 
             modelBuilder.Entity("Assignment_3_SWE30003.Models.Payment", b =>
@@ -232,7 +235,7 @@ namespace Assignment_3_SWE30003.Migrations
                     b.HasIndex("OrderId")
                         .IsUnique();
 
-                    b.ToTable("Payments", (string)null);
+                    b.ToTable("Payments");
                 });
 
             modelBuilder.Entity("Assignment_3_SWE30003.Models.Product", b =>
@@ -259,7 +262,7 @@ namespace Assignment_3_SWE30003.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Products", (string)null);
+                    b.ToTable("Products");
                 });
 
             modelBuilder.Entity("Assignment_3_SWE30003.Models.SalesReport", b =>
@@ -283,7 +286,7 @@ namespace Assignment_3_SWE30003.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("SalesReports", (string)null);
+                    b.ToTable("SalesReports");
                 });
 
             modelBuilder.Entity("Assignment_3_SWE30003.Models.Shipment", b =>
@@ -319,7 +322,7 @@ namespace Assignment_3_SWE30003.Migrations
                     b.HasIndex("OrderId")
                         .IsUnique();
 
-                    b.ToTable("Shipments", (string)null);
+                    b.ToTable("Shipments");
                 });
 
             modelBuilder.Entity("Assignment_3_SWE30003.Models.ShoppingCart", b =>
@@ -345,7 +348,7 @@ namespace Assignment_3_SWE30003.Migrations
                     b.HasIndex("CustomerId")
                         .IsUnique();
 
-                    b.ToTable("ShoppingCarts", (string)null);
+                    b.ToTable("ShoppingCarts");
                 });
 
             modelBuilder.Entity("Assignment_3_SWE30003.Models.CartItem", b =>

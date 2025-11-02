@@ -303,7 +303,7 @@ namespace Assignment_3_SWE30003.Controllers
 
                 payment.ProcessPayment((productId, quantity) =>
                 {
-                    var inventory = _context.Inventories.FirstOrDefault(i => i.ProductId == productId);
+                    var inventory = _context.InventoryProducts.FirstOrDefault(i => i.ProductId == productId);
                     if (inventory != null)
                     {
                         if (inventory.Quantity < quantity)
@@ -318,8 +318,9 @@ namespace Assignment_3_SWE30003.Controllers
                     }
                 });
 
-                var shipment = new Shipment(payment.Order)
+                var shipment = new Shipment()
                 {
+                    Order = payment.Order,
                     Address = payment.Order.ShipmentAddress ?? "Default Address",
                     ContactName = payment.Order.ContactName ?? "Customer",
                     TrackingNumber = $"TRK-{Guid.NewGuid().ToString().Substring(0, 8)}"
@@ -401,7 +402,7 @@ namespace Assignment_3_SWE30003.Controllers
 
                 payment.ProcessPayment((productId, quantity) =>
                 {
-                    var inventory = _context.Inventories.FirstOrDefault(i => i.ProductId == productId);
+                    var inventory = _context.InventoryProducts.FirstOrDefault(i => i.ProductId == productId);
                     if (inventory != null)
                     {
                         if (inventory.Quantity < quantity)
@@ -416,8 +417,9 @@ namespace Assignment_3_SWE30003.Controllers
                     }
                 });
 
-                var shipment = new Shipment(payment.Order)
+                var shipment = new Shipment
                 {
+                    Order = payment.Order,
                     Address = payment.Order.ShipmentAddress ?? "Default Address",
                     ContactName = payment.Order.ContactName ?? "Customer",
                     TrackingNumber = $"TRK-{Guid.NewGuid().ToString().Substring(0, 8)}"

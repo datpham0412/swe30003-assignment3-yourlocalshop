@@ -1,16 +1,25 @@
-"use client"
+"use client";
 
-import type React from "react"
-import Link from "next/link"
-import { CreditCard, FileText, Truck, BarChart3, Package, ChevronDown, Users, User } from "lucide-react"
+import type React from "react";
+import Link from "next/link";
+import {
+  CreditCard,
+  FileText,
+  Truck,
+  BarChart3,
+  Package,
+  ChevronDown,
+  Users,
+  User,
+} from "lucide-react";
 
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import { DndContext, type DragEndEvent, DragOverlay, type DragStartEvent } from "@dnd-kit/core"
-import { Button } from "@/components/ui/button"
-import { Spinner } from "@/components/ui/spinner"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { DndContext, type DragEndEvent, DragOverlay, type DragStartEvent } from "@dnd-kit/core";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -18,285 +27,317 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Card, CardContent } from "@/components/ui/card"
-import { LogOut } from "lucide-react"
-import AddProductForm from "@/components/admin/AddProductForm"
-import ProductList, { type Product } from "@/components/admin/ProductList"
-import CatalogueSpace from "@/components/admin/CatalogueSpace"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+} from "@/components/ui/dialog";
+import { Card, CardContent } from "@/components/ui/card";
+import { LogOut } from "lucide-react";
+import AddProductForm from "@/components/admin/AddProductForm";
+import ProductList, { type Product } from "@/components/admin/ProductList";
+import CatalogueSpace from "@/components/admin/CatalogueSpace";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Inventory {
-  id: number
-  productId: number
-  quantity: number
+  id: number;
+  productId: number;
+  quantity: number;
 }
 
 export default function AdminDashboard() {
-  const router = useRouter()
-  const [email, setEmail] = useState<string | null>(null)
-  const [password, setPassword] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
+  const router = useRouter();
+  const [email, setEmail] = useState<string | null>(null);
+  const [password, setPassword] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const [products, setProducts] = useState<Product[]>([])
-  const [catalogueProducts, setCatalogueProducts] = useState<Product[]>([])
-  const [catalogueProductIds, setCatalogueProductIds] = useState<number[]>([])
-  const [dataLoading, setDataLoading] = useState(false)
+  const [products, setProducts] = useState<Product[]>([]);
+  const [catalogueProducts, setCatalogueProducts] = useState<Product[]>([]);
+  const [catalogueProductIds, setCatalogueProductIds] = useState<number[]>([]);
+  const [dataLoading, setDataLoading] = useState(false);
 
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [editProductData, setEditProductData] = useState({
     name: "",
     price: "",
     category: "",
     quantity: "", // Added quantity field for editing
-  })
-  const [editProductLoading, setEditProductLoading] = useState(false)
+  });
+  const [editProductLoading, setEditProductLoading] = useState(false);
 
-  const [deletingProductId, setDeletingProductId] = useState<number | null>(null)
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [productToDelete, setProductToDelete] = useState<Product | null>(null)
+  const [deletingProductId, setDeletingProductId] = useState<number | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
 
-  const [activeProduct, setActiveProduct] = useState<Product | null>(null)
+  const [activeProduct, setActiveProduct] = useState<Product | null>(null);
 
-  const [toast, setToast] = useState<{ type: "success" | "error"; text: string } | null>(null)
-  const [menuOpen, setMenuOpen] = useState(false)
-  const [createDialogOpen, setCreateDialogOpen] = useState(false)
-  const [newName, setNewName] = useState("")
-  const [newEmail, setNewEmail] = useState("")
-  const [newPassword, setNewPassword] = useState("")
-  const [newPhone, setNewPhone] = useState("")
-  const [newRole, setNewRole] = useState<string | null>("Customer")
-  const [creatingUser, setCreatingUser] = useState(false)
-  const [createUserError, setCreateUserError] = useState<string | null>(null)
+  const [toast, setToast] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newEmail, setNewEmail] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [newPhone, setNewPhone] = useState("");
+  const [newRole, setNewRole] = useState<string | null>("Customer");
+  const [creatingUser, setCreatingUser] = useState(false);
+  const [createUserError, setCreateUserError] = useState<string | null>(null);
 
   useEffect(() => {
-    const storedEmail = localStorage.getItem("email")
-    const storedPassword = localStorage.getItem("password")
-    const storedRole = localStorage.getItem("role")
+    const storedEmail = localStorage.getItem("email");
+    const storedPassword = localStorage.getItem("password");
+    const storedRole = localStorage.getItem("role");
 
     if (!storedEmail || !storedPassword || !storedRole) {
-      router.push("/auth")
-      return
+      router.push("/auth");
+      return;
     }
 
     if (storedRole !== "Admin") {
-      router.push("/dashboard")
-      return
+      router.push("/dashboard");
+      return;
     }
 
-    setEmail(storedEmail)
-    setPassword(storedPassword)
-    setLoading(false)
+    setEmail(storedEmail);
+    setPassword(storedPassword);
+    setLoading(false);
 
-    fetchAllData()
-  }, [router])
+    fetchAllData();
+  }, [router]);
 
   const showToast = (type: "success" | "error", text: string) => {
-    setToast({ type, text })
-    setTimeout(() => setToast(null), 4000)
-  }
+    setToast({ type, text });
+    setTimeout(() => setToast(null), 4000);
+  };
 
   const fetchAllData = async () => {
-    setDataLoading(true)
+    setDataLoading(true);
     try {
       // Fetch products, inventory, and catalogue in parallel
       const [productsRes, inventoryRes, catalogueRes] = await Promise.all([
         fetch("http://localhost:5074/api/Product/list"),
-        fetch("http://localhost:5074/api/Inventory/list"),
-        fetch("http://localhost:5074/api/Catalogue/list"),
-      ])
+        fetch("http://localhost:5074/api/Inventory/list-products"),
+        fetch("http://localhost:5074/api/Catalogue/list-products"),
+      ]);
 
       if (!productsRes.ok) {
-        showToast("error", "Failed to load products.")
-        setDataLoading(false)
-        return
+        showToast("error", "Failed to load products.");
+        setDataLoading(false);
+        return;
       }
 
-      const productsData: Product[] = await productsRes.json()
-      const inventoryData: Inventory[] = inventoryRes.ok ? await inventoryRes.json() : []
-      const catalogueData: Product[] = catalogueRes.ok ? await catalogueRes.json() : []
+      const productsData: Product[] = await productsRes.json();
+      const inventoryData: Inventory[] = inventoryRes.ok ? await inventoryRes.json() : [];
+      const catalogueData: Product[] = catalogueRes.ok ? await catalogueRes.json() : [];
 
       // Merge products with inventory quantities
       const mergedProducts = productsData.map((product) => {
-        const inventory = inventoryData.find((inv) => inv.productId === product.id)
+        const inventory = inventoryData.find((inv) => inv.productId === product.id);
         return {
           ...product,
           quantity: inventory?.quantity,
           inventoryId: inventory?.id,
-        }
-      })
+        };
+      });
 
-      setProducts(mergedProducts)
-      setCatalogueProducts(catalogueData)
-      setCatalogueProductIds(catalogueData.map((p) => p.id))
+      setProducts(mergedProducts);
+      setCatalogueProducts(catalogueData);
+      setCatalogueProductIds(catalogueData.map((p) => p.id));
     } catch (error) {
-      showToast("error", "Network error. Please check your connection.")
+      showToast("error", "Network error. Please check your connection.");
     } finally {
-      setDataLoading(false)
+      setDataLoading(false);
     }
-  }
+  };
 
   const handleDragStart = (event: DragStartEvent) => {
-    const product = event.active.data.current as Product
-    setActiveProduct(product)
-  }
+    const product = event.active.data.current as Product;
+    setActiveProduct(product);
+  };
 
   const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event
-    setActiveProduct(null)
+    const { active, over } = event;
+    setActiveProduct(null);
 
-    if (!active || !email || !password) return
+    if (!active || !email || !password) return;
 
-    const product = active.data.current as Product
-    const isCurrentlyInCatalogue = catalogueProductIds.includes(product.id)
+    const product = active.data.current as Product;
 
-    let shouldBeInCatalogue = isCurrentlyInCatalogue
+    if (!product.id) return;
+
+    const isCurrentlyInCatalogue = catalogueProductIds.includes(product.id);
+
+    let shouldBeInCatalogue = isCurrentlyInCatalogue;
 
     if (over?.id === "catalogue-space") {
-      shouldBeInCatalogue = true
+      shouldBeInCatalogue = true;
     } else if (over?.id === "product-list" || over === null) {
-      shouldBeInCatalogue = false
+      shouldBeInCatalogue = false;
     } else {
       // Dropped on another droppable - no change
-      return
+      return;
     }
 
     // Only update if the state actually changed
-    if (isCurrentlyInCatalogue === shouldBeInCatalogue) return
+    if (isCurrentlyInCatalogue === shouldBeInCatalogue) return;
 
     try {
-      let response: Response
+      let response: Response;
 
       if (shouldBeInCatalogue) {
         // Add to catalogue
         response = await fetch(
-          `http://localhost:5074/api/Catalogue/add?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}&productId=${product.id}`,
-          { method: "POST" },
-        )
+          `http://localhost:5074/api/Catalogue/add-product?email=${encodeURIComponent(
+            email
+          )}&password=${encodeURIComponent(password)}&productId=${product.id}`,
+          { method: "POST" }
+        );
       } else {
         // Remove from catalogue
         response = await fetch(
-          `http://localhost:5074/api/Catalogue/remove?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}&productId=${product.id}`,
-          { method: "DELETE" },
-        )
+          `http://localhost:5074/api/Catalogue/remove-product?email=${encodeURIComponent(
+            email
+          )}&password=${encodeURIComponent(password)}&productId=${product.id}`,
+          { method: "DELETE" }
+        );
       }
 
       if (response.ok) {
-        showToast("success", shouldBeInCatalogue ? "Product added to catalogue!" : "Product removed from catalogue!")
-        fetchAllData()
+        showToast(
+          "success",
+          shouldBeInCatalogue ? "Product added to catalogue!" : "Product removed from catalogue!"
+        );
+        fetchAllData();
       } else {
-        const errorText = await response.text()
-        showToast("error", errorText || "Failed to update catalogue status.")
+        const errorText = await response.text();
+        showToast("error", errorText || "Failed to update catalogue status.");
       }
     } catch (error) {
-      showToast("error", "Network error. Please check your connection.")
+      showToast("error", "Network error. Please check your connection.");
     }
-  }
+  };
 
   const handleEditProduct = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!editingProduct || !email || !password) return
+    e.preventDefault();
+    if (!editingProduct || !email || !password) return;
 
-    setEditProductLoading(true)
+    setEditProductLoading(true);
 
     try {
       // Update product details
       const productResponse = await fetch(
-        `http://localhost:5074/api/Product/update?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}&id=${editingProduct.id}&name=${encodeURIComponent(editProductData.name)}&category=${encodeURIComponent(editProductData.category)}&price=${encodeURIComponent(editProductData.price)}`,
-        { method: "PUT" },
-      )
+        `http://localhost:5074/api/Product/update?email=${encodeURIComponent(
+          email
+        )}&password=${encodeURIComponent(password)}&id=${
+          editingProduct.id
+        }&name=${encodeURIComponent(editProductData.name)}&category=${encodeURIComponent(
+          editProductData.category
+        )}&price=${encodeURIComponent(editProductData.price)}`,
+        { method: "PUT" }
+      );
 
       if (!productResponse.ok) {
-        const errorText = await productResponse.text()
-        showToast("error", errorText || "Failed to update product.")
-        setEditProductLoading(false)
-        return
+        const errorText = await productResponse.text();
+        showToast("error", errorText || "Failed to update product.");
+        setEditProductLoading(false);
+        return;
       }
 
       // Update inventory if quantity changed
       if (editProductData.quantity !== "") {
-        const quantity = Number.parseInt(editProductData.quantity)
+        const quantity = Number.parseInt(editProductData.quantity);
 
         if (editingProduct.inventoryId) {
           // Update existing inventory
           await fetch(
-            `http://localhost:5074/api/Inventory/update?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}&productId=${editingProduct.id}&quantity=${quantity}`,
-            { method: "PUT" },
-          )
+            `http://localhost:5074/api/Inventory/update-product?email=${encodeURIComponent(
+              email
+            )}&password=${encodeURIComponent(password)}&productId=${
+              editingProduct.id
+            }&quantity=${quantity}`,
+            { method: "PUT" }
+          );
         } else {
           // Add new inventory
           await fetch(
-            `http://localhost:5074/api/Inventory/add?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}&productId=${editingProduct.id}&quantity=${quantity}`,
-            { method: "POST" },
-          )
+            `http://localhost:5074/api/Inventory/add-product?email=${encodeURIComponent(
+              email
+            )}&password=${encodeURIComponent(password)}&productId=${
+              editingProduct.id
+            }&quantity=${quantity}`,
+            { method: "POST" }
+          );
         }
       }
 
-      showToast("success", "Product updated successfully!")
-      setEditingProduct(null)
-      fetchAllData()
+      showToast("success", "Product updated successfully!");
+      setEditingProduct(null);
+      fetchAllData();
     } catch (error) {
-      showToast("error", "Network error. Please check your connection.")
+      showToast("error", "Network error. Please check your connection.");
     } finally {
-      setEditProductLoading(false)
+      setEditProductLoading(false);
     }
-  }
+  };
 
   const handleDeleteProduct = async () => {
-    if (!productToDelete || !email || !password) return
+    if (!productToDelete || !email || !password) return;
 
-    setDeletingProductId(productToDelete.id)
+    setDeletingProductId(productToDelete.id);
 
     try {
       const response = await fetch(
-        `http://localhost:5074/api/Product/delete?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}&id=${productToDelete.id}`,
-        { method: "DELETE" },
-      )
+        `http://localhost:5074/api/Product/delete?email=${encodeURIComponent(
+          email
+        )}&password=${encodeURIComponent(password)}&id=${productToDelete.id}`,
+        { method: "DELETE" }
+      );
 
       if (response.ok) {
-        showToast("success", "Product deleted successfully!")
-        setProducts(products.filter((p) => p.id !== productToDelete.id))
+        showToast("success", "Product deleted successfully!");
+        setProducts(products.filter((p) => p.id !== productToDelete.id));
       } else {
-        const errorText = await response.text()
-        showToast("error", errorText || "Failed to delete product.")
+        const errorText = await response.text();
+        showToast("error", errorText || "Failed to delete product.");
       }
     } catch (error) {
-      showToast("error", "Network error. Please check your connection.")
+      showToast("error", "Network error. Please check your connection.");
     } finally {
-      setDeletingProductId(null)
-      setDeleteDialogOpen(false)
-      setProductToDelete(null)
+      setDeletingProductId(null);
+      setDeleteDialogOpen(false);
+      setProductToDelete(null);
     }
-  }
+  };
 
   const openEditDialog = (product: Product) => {
-    setEditingProduct(product)
+    setEditingProduct(product);
     setEditProductData({
       name: product.name,
       price: product.price.toString(),
       category: product.category,
       quantity: product.quantity !== undefined ? product.quantity.toString() : "", // Include quantity
-    })
-  }
+    });
+  };
 
   const openDeleteDialog = (product: Product) => {
-    setProductToDelete(product)
-    setDeleteDialogOpen(true)
-  }
+    setProductToDelete(product);
+    setDeleteDialogOpen(true);
+  };
 
   const handleLogout = () => {
-    localStorage.removeItem("email")
-    localStorage.removeItem("password")
-    localStorage.removeItem("role")
-    router.push("/auth")
-  }
+    localStorage.removeItem("email");
+    localStorage.removeItem("password");
+    localStorage.removeItem("role");
+    router.push("/auth");
+  };
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Spinner className="h-8 w-8 text-purple-600" />
       </div>
-    )
+    );
   }
 
   return (
@@ -309,24 +350,45 @@ export default function AdminDashboard() {
             </h1>
             <nav className="flex items-center gap-2">
               <div className="relative">
-                <Button variant="ghost" size="sm" className="flex items-center gap-2" onClick={() => setMenuOpen((s) => !s)}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="flex items-center gap-2"
+                  onClick={() => setMenuOpen((s) => !s)}
+                >
                   Manage
                   <ChevronDown className="h-4 w-4" />
                 </Button>
                 {menuOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white border rounded-md shadow-lg z-50">
                     <div className="flex flex-col">
-                      <Link href="/payments" className="px-3 py-2 hover:bg-gray-50 flex items-center gap-2">
-                        <CreditCard className="h-4 w-4" />Payments
+                      <Link
+                        href="/payments"
+                        className="px-3 py-2 hover:bg-gray-50 flex items-center gap-2"
+                      >
+                        <CreditCard className="h-4 w-4" />
+                        Payments
                       </Link>
-                      <Link href="/orders/admin" className="px-3 py-2 hover:bg-gray-50 flex items-center gap-2">
-                        <Package className="h-4 w-4" />Orders
+                      <Link
+                        href="/orders/admin"
+                        className="px-3 py-2 hover:bg-gray-50 flex items-center gap-2"
+                      >
+                        <Package className="h-4 w-4" />
+                        Orders
                       </Link>
-                      <Link href="/invoices" className="px-3 py-2 hover:bg-gray-50 flex items-center gap-2">
-                        <FileText className="h-4 w-4" />Invoices
+                      <Link
+                        href="/invoices"
+                        className="px-3 py-2 hover:bg-gray-50 flex items-center gap-2"
+                      >
+                        <FileText className="h-4 w-4" />
+                        Invoices
                       </Link>
-                      <Link href="/shipments" className="px-3 py-2 hover:bg-gray-50 flex items-center gap-2">
-                        <Truck className="h-4 w-4" />Shipments
+                      <Link
+                        href="/shipments"
+                        className="px-3 py-2 hover:bg-gray-50 flex items-center gap-2"
+                      >
+                        <Truck className="h-4 w-4" />
+                        Shipments
                       </Link>
                     </div>
                   </div>
@@ -387,7 +449,9 @@ export default function AdminDashboard() {
         <main className="container mx-auto px-4 py-8">
           <div className="text-center space-y-2 mb-8">
             <h2 className="text-4xl font-bold text-gray-900">Product & Catalogue Management</h2>
-            <p className="text-gray-600">Drag products into the catalogue space to make them visible to customers</p>
+            <p className="text-gray-600">
+              Drag products into the catalogue space to make them visible to customers
+            </p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -444,7 +508,9 @@ export default function AdminDashboard() {
                   id="edit-category"
                   type="text"
                   value={editProductData.category}
-                  onChange={(e) => setEditProductData({ ...editProductData, category: e.target.value })}
+                  onChange={(e) =>
+                    setEditProductData({ ...editProductData, category: e.target.value })
+                  }
                   required
                   className="rounded-lg"
                 />
@@ -457,7 +523,9 @@ export default function AdminDashboard() {
                   type="number"
                   step="0.01"
                   value={editProductData.price}
-                  onChange={(e) => setEditProductData({ ...editProductData, price: e.target.value })}
+                  onChange={(e) =>
+                    setEditProductData({ ...editProductData, price: e.target.value })
+                  }
                   required
                   className="rounded-lg"
                 />
@@ -469,7 +537,9 @@ export default function AdminDashboard() {
                   id="edit-quantity"
                   type="number"
                   value={editProductData.quantity}
-                  onChange={(e) => setEditProductData({ ...editProductData, quantity: e.target.value })}
+                  onChange={(e) =>
+                    setEditProductData({ ...editProductData, quantity: e.target.value })
+                  }
                   placeholder="Leave empty to keep current"
                   className="rounded-lg"
                 />
@@ -508,7 +578,8 @@ export default function AdminDashboard() {
             <DialogHeader>
               <DialogTitle>Confirm Deletion</DialogTitle>
               <DialogDescription>
-                Are you sure you want to delete "{productToDelete?.name}"? This action cannot be undone.
+                Are you sure you want to delete "{productToDelete?.name}"? This action cannot be
+                undone.
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
@@ -516,8 +587,8 @@ export default function AdminDashboard() {
                 type="button"
                 variant="outline"
                 onClick={() => {
-                  setDeleteDialogOpen(false)
-                  setProductToDelete(null)
+                  setDeleteDialogOpen(false);
+                  setProductToDelete(null);
                 }}
                 disabled={deletingProductId !== null}
               >
@@ -550,106 +621,122 @@ export default function AdminDashboard() {
             </DialogHeader>
             <form
               onSubmit={async (e) => {
-                e.preventDefault()
+                e.preventDefault();
                 if (!email || !password) {
-                  showToast("error", "Admin credentials missing. Refresh and try again.")
-                  return
+                  showToast("error", "Admin credentials missing. Refresh and try again.");
+                  return;
                 }
 
-                setCreatingUser(true)
-                setCreateUserError(null)
+                setCreatingUser(true);
+                setCreateUserError(null);
                 // Sanitize Australian phone
                 const sanitizeAusPhone = (input: string) => {
-                  if (!input) return ""
-                  let digits = input.replace(/\D/g, "")
-                  if (digits.startsWith("61")) return "+" + digits
-                  if (digits.startsWith("0")) return "+61" + digits.slice(1)
-                  return digits
-                }
+                  if (!input) return "";
+                  let digits = input.replace(/\D/g, "");
+                  if (digits.startsWith("61")) return "+" + digits;
+                  if (digits.startsWith("0")) return "+61" + digits.slice(1);
+                  return digits;
+                };
 
-                const phoneNormalized = sanitizeAusPhone(newPhone)
+                const phoneNormalized = sanitizeAusPhone(newPhone);
                 if (!phoneNormalized) {
-                  showToast("error", "Phone number is required and must be valid.")
-                  setCreatingUser(false)
-                  return
+                  showToast("error", "Phone number is required and must be valid.");
+                  setCreatingUser(false);
+                  return;
                 }
 
                 try {
                   // If role is Customer, call public register endpoint
-                  let res: Response
+                  let res: Response;
                   if (newRole === "Customer") {
                     res = await fetch(`http://localhost:5074/api/Auth/register`, {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ name: newName, email: newEmail, password: newPassword, phone: phoneNormalized }),
-                    })
+                      body: JSON.stringify({
+                        name: newName,
+                        email: newEmail,
+                        password: newPassword,
+                        phone: phoneNormalized,
+                      }),
+                    });
                   } else {
                     // Admin creation endpoint (expects admin auth via query params)
                     res = await fetch(
                       `http://localhost:5074/api/Auth/createbyadmin?email=${encodeURIComponent(
-                        email,
+                        email
                       )}&password=${encodeURIComponent(password)}&newEmail=${encodeURIComponent(
-                        newEmail,
-                      )}&newPassword=${encodeURIComponent(newPassword)}&name=${encodeURIComponent(newName)}&role=${encodeURIComponent(
-                        newRole || "Admin",
-                      )}`,
+                        newEmail
+                      )}&newPassword=${encodeURIComponent(newPassword)}&name=${encodeURIComponent(
+                        newName
+                      )}&role=${encodeURIComponent(newRole || "Admin")}`,
                       {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ phone: phoneNormalized }),
-                      },
-                    )
+                      }
+                    );
                   }
 
                   if (!res.ok) {
                     // Try to parse JSON error first, fall back to text
-                    let text = "Failed to create user"
+                    let text = "Failed to create user";
                     try {
-                      const errJson = await res.json()
-                      text = errJson?.message ?? text
+                      const errJson = await res.json();
+                      text = errJson?.message ?? text;
                     } catch {
-                      const txt = await res.text()
-                      if (txt) text = txt
+                      const txt = await res.text();
+                      if (txt) text = txt;
                     }
                     // show inline error in the dialog for immediate visibility
-                    setCreateUserError(text)
+                    setCreateUserError(text);
                     // Do not show a toast for failure — inline message is sufficient
-                    setCreatingUser(false)
-                    return
+                    setCreatingUser(false);
+                    return;
                   }
 
                   // On success prefer structured JSON (backend returns { message, role })
-                  let successText = "Account created successfully"
+                  let successText = "Account created successfully";
                   try {
-                    const data = await res.json()
-                    successText = data?.message ?? successText
+                    const data = await res.json();
+                    successText = data?.message ?? successText;
                   } catch {
-                    const txt = await res.text()
-                    if (txt) successText = txt
+                    const txt = await res.text();
+                    if (txt) successText = txt;
                   }
-                  showToast("success", successText || "Account created successfully")
-                  setCreateDialogOpen(false)
-                  setNewName("")
-                  setNewEmail("")
-                  setNewPassword("")
-                  setNewRole("Customer")
-                  setCreateUserError(null)
+                  showToast("success", successText || "Account created successfully");
+                  setCreateDialogOpen(false);
+                  setNewName("");
+                  setNewEmail("");
+                  setNewPassword("");
+                  setNewRole("Customer");
+                  setCreateUserError(null);
                 } catch (err) {
-                  showToast("error", "Network error. Please try again.")
+                  showToast("error", "Network error. Please try again.");
                 } finally {
-                  setCreatingUser(false)
+                  setCreatingUser(false);
                 }
               }}
               className="space-y-4"
             >
               <div className="space-y-2">
                 <Label htmlFor="name">Full name</Label>
-                <Input id="name" value={newName} onChange={(e) => setNewName(e.target.value)} required />
+                <Input
+                  id="name"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  required
+                />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} required />
+                <Input
+                  id="email"
+                  type="email"
+                  value={newEmail}
+                  onChange={(e) => setNewEmail(e.target.value)}
+                  required
+                />
               </div>
 
               <div className="space-y-2">
@@ -663,10 +750,16 @@ export default function AdminDashboard() {
                   required
                 />
 
-              <div className="space-y-2">
-                <Label htmlFor="password">Default Password</Label>
-                <Input id="password" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required />
-              </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Default Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    required
+                  />
+                </div>
               </div>
 
               {createUserError && (
@@ -689,10 +782,19 @@ export default function AdminDashboard() {
               </div>
 
               <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setCreateDialogOpen(false)} disabled={creatingUser}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setCreateDialogOpen(false)}
+                  disabled={creatingUser}
+                >
                   Cancel
                 </Button>
-                <Button type="submit" className="bg-gradient-to-r from-purple-600 to-emerald-600" disabled={creatingUser}>
+                <Button
+                  type="submit"
+                  className="bg-gradient-to-r from-purple-600 to-emerald-600"
+                  disabled={creatingUser}
+                >
                   {creatingUser ? (
                     <span className="flex items-center gap-2">
                       <Spinner className="h-4 w-4" />
@@ -723,5 +825,5 @@ export default function AdminDashboard() {
         </footer>
       </div>
     </DndContext>
-  )
+  );
 }

@@ -9,64 +9,51 @@ namespace Assignment_3_SWE30003.Controllers
     public class InventoryController : ControllerBase
     {
         private readonly AppDbContext _context;
-
-        public InventoryController(AppDbContext context)
+        private readonly Inventory _inventory;
+        public InventoryController(AppDbContext context, Inventory inventory)
         {
             _context = context;
+            _inventory = inventory;
         }
 
-        // Add a new product quantity (3.3.11)
-        [HttpPost("add")]
-        public IActionResult Add(string email, string password, int productId, int quantity)
+        // Add a new product to the inventory (requires admin authentication)
+        [HttpPost("add-product")]
+        public IActionResult AddProductToInventory(string email, string password, int productId, int quantity)
         {
+            // Authenticate admin user
             var admin = _context.Accounts.FirstOrDefault(a =>
                 a.Email == email && a.Password == password && a.Role == "Admin");
 
             if (admin == null)
                 return Unauthorized("Access denied. Only Admins can add inventory records.");
 
-            // Use Inventory static helper directly
-            var result = Inventory.AddInventory(_context, productId, quantity);
+            // Add product to inventory
+            var result = _inventory.AddProduct(productId, quantity);
             return Ok(result);
         }
 
-
-        // Edits current stock quantity for a product (3.3.11)
-        [HttpPut("update")]
-        public IActionResult Update(string email, string password, int productId, int quantity)
+        // Update the stock quantity of a product in inventory (requires admin authentication)
+        [HttpPut("update-product")]
+        public IActionResult UpdateProductToInventory(string email, string password, int productId, int quantity)
         {
+            // Authenticate admin user
             var admin = _context.Accounts.FirstOrDefault(a =>
                 a.Email == email && a.Password == password && a.Role == "Admin");
 
             if (admin == null)
                 return Unauthorized("Access denied. Only Admins can update inventory records.");
 
-            // Use Inventory static helper directly
-            var result = Inventory.UpdateQuantity(_context, productId, quantity);
+            // Update product quantity
+            var result = _inventory.UpdateQuantity(productId, quantity);
             return Ok(result);
         }
 
-
-        // Edits current stock quantity for a product (3.3.11)
-        [HttpDelete("delete")]
-        public IActionResult Delete(string email, string password, int productId)
+        // Retrieve all products and their quantities in inventory (requires admin authentication)
+        [HttpGet("list-products")]
+        public IActionResult ListProducts()
         {
-            var admin = _context.Accounts.FirstOrDefault(a =>
-                a.Email == email && a.Password == password && a.Role == "Admin");
-
-            if (admin == null)
-                return Unauthorized("Access denied. Only Admins can delete inventory records.");
-
-            // Use Inventory static helper directly
-            var result = Inventory.DeleteInventory(_context, productId);
-            return Ok(result);
-        }
-
-        // Knows details and quantity of all products (3.3.11)
-        [HttpGet("list")]
-        public IActionResult List()
-        {
-            var inventories = Inventory.GetAllInventories(_context);
+            // TODO: Authorization
+            var inventories = _inventory.GetInventoryProducts();
             return Ok(inventories);
         }
     }
