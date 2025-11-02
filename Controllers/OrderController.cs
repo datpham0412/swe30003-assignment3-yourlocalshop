@@ -318,9 +318,8 @@ namespace Assignment_3_SWE30003.Controllers
                     }
                 });
 
-                var shipment = new Shipment
+                var shipment = new Shipment(payment.Order)
                 {
-                    OrderId = payment.Order.Id,
                     Address = payment.Order.ShipmentAddress ?? "Default Address",
                     ContactName = payment.Order.ContactName ?? "Customer",
                     TrackingNumber = $"TRK-{Guid.NewGuid().ToString().Substring(0, 8)}"
@@ -417,9 +416,8 @@ namespace Assignment_3_SWE30003.Controllers
                     }
                 });
 
-                var shipment = new Shipment
+                var shipment = new Shipment(payment.Order)
                 {
-                    OrderId = payment.Order.Id,
                     Address = payment.Order.ShipmentAddress ?? "Default Address",
                     ContactName = payment.Order.ContactName ?? "Customer",
                     TrackingNumber = $"TRK-{Guid.NewGuid().ToString().Substring(0, 8)}"
