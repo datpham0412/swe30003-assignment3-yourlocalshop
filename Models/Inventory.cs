@@ -1,75 +1,60 @@
 using Assignment_3_SWE30003.Data;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
 
 namespace Assignment_3_SWE30003.Models
 {
     public class Inventory
     {
-        [Key]
-        public int Id { get; set; }
-        [ForeignKey(nameof(Product))] 
-        public int ProductId { get; set; }
-        public int Quantity { get; set; }
+        private readonly AppDbContext _context;
 
-        public Product? Product { get; set; }
-
-        // Add new product quantity (3.3.11)
-        public static string AddInventory(AppDbContext context, int productId, int quantity)
+        // Initialize inventory service with database context
+        public Inventory(AppDbContext context)
         {
-            var product = context.Products.FirstOrDefault(p => p.Id == productId);
+            _context = context;
+        }
+
+        // Retrieve all products with their stock quantities from inventory
+        public List<InventoryProduct> GetInventoryProducts()
+        {
+            return _context.InventoryProducts.ToList();
+        }
+
+        // Add a product to inventory or increase quantity if it already exists
+        public string AddProduct(int productId, int quantity)
+        {
+            // Find product in database
+            var product = _context.Products.FirstOrDefault(p => p.Id == productId);
             if (product == null)
                 return "Product not found.";
 
-            var existing = context.Inventories.FirstOrDefault(i => i.ProductId == productId);
+            // Check if product already has inventory record
+            var existing = _context.InventoryProducts.FirstOrDefault(i => i.ProductId == productId);
             if (existing != null)
             {
+                // Increase existing quantity
                 existing.Quantity += quantity;
-                context.SaveChanges();
+                _context.SaveChanges();
                 return $"Increased stock for '{product.Name}' to {existing.Quantity}.";
             }
 
-            var inventory = new Inventory { ProductId = productId, Quantity = quantity };
-            context.Inventories.Add(inventory);
-            context.SaveChanges();
+            // Create new inventory record
+            var inventory = new InventoryProduct { ProductId = productId, Quantity = quantity };
+            _context.InventoryProducts.Add(inventory);
+            _context.SaveChanges();
             return $"Added inventory for '{product.Name}' with {quantity} units.";
         }
-        // Edits current stock quantity for a product (3.3.11)
-        public static string UpdateQuantity(AppDbContext context, int productId, int newQuantity)
+
+        // Set the stock quantity of a product to a specific value
+        public string UpdateQuantity(int productId, int newQuantity)
         {
-            var inventory = context.Inventories.FirstOrDefault(i => i.ProductId == productId);
+            // Find inventory record
+            var inventory = _context.InventoryProducts.FirstOrDefault(i => i.ProductId == productId);
             if (inventory == null)
                 return "Inventory entry not found.";
 
+            // Update quantity
             inventory.Quantity = newQuantity;
-            context.SaveChanges();
+            _context.SaveChanges();
             return $"Updated stock for product ID {productId} to {newQuantity}.";
-        }
-
-        // Edits current stock quantity for a product (3.3.11)
-        public static string DeleteInventory(AppDbContext context, int productId)
-        {
-            var inventory = context.Inventories.FirstOrDefault(i => i.ProductId == productId);
-            if (inventory == null)
-                return "Inventory entry not found.";
-
-            context.Inventories.Remove(inventory);
-            context.SaveChanges();
-            return $"Inventory for product ID {productId} deleted.";
-        }
-        // Knows details and quantity of all products (3.3.11)
-        public static List<Inventory> GetAllInventories(AppDbContext context)
-        {
-            return context.Inventories
-                          .Select(i => new Inventory
-                          {
-                              Id = i.Id,
-                              ProductId = i.ProductId,
-                              Quantity = i.Quantity,
-                              Product = i.Product
-                          })
-                          .ToList();
         }
     }
 }

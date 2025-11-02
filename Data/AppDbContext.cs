@@ -8,7 +8,7 @@ namespace Assignment_3_SWE30003.Data
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
         public DbSet<Account> Accounts { get; set; }
         public DbSet<Product> Products { get; set; }
-        public DbSet<Inventory> Inventories { get; set; }
+        public DbSet<InventoryProduct> InventoryProducts { get; set; }
         public DbSet<ShoppingCart> ShoppingCarts { get; set; }
         public DbSet<CartItem> CartItems { get; set; }
         public DbSet<Order> Orders { get; set; }
@@ -25,10 +25,10 @@ namespace Assignment_3_SWE30003.Data
                 .Property(p => p.IsInCatalogue)
                 .HasDefaultValue(false);
 
-            modelBuilder.Entity<Inventory>()
+            modelBuilder.Entity<InventoryProduct>()
                 .HasOne(i => i.Product)
-                .WithOne(p => p.Inventory)
-                .HasForeignKey<Inventory>(i => i.ProductId)
+                .WithOne()
+                .HasForeignKey<InventoryProduct>(ip => ip.ProductId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<ShoppingCart>()

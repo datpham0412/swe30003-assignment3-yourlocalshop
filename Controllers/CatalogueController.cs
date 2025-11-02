@@ -11,14 +11,14 @@ namespace Assignment_3_SWE30003.Controllers
         private readonly AppDbContext _context;
         private readonly Catalogue _catalogue;
 
-        // Inject database context and catalogue service for managing product listings
+        // Initialize controller with database context and catalogue service
         public CatalogueController(AppDbContext context, Catalogue catalogue)
         {
             _context = context;
             _catalogue = catalogue;
         }
 
-        // Get all products currently available in the catalogue
+        // Retrieve all products currently listed in the catalogue
         [HttpGet("list-products")]
         public IActionResult ListAllProductsInCatalogue()
         {
@@ -26,32 +26,34 @@ namespace Assignment_3_SWE30003.Controllers
             return Ok(_catalogue.GetCatalogueProducts());
         }
 
-        // Add a product to the catalogue (admin only)
+        // Add a product to the catalogue (requires admin authentication)
         [HttpPost("add-product")]
         public IActionResult AddProductToCatalogue(string email, string password, int productId)
         {
-            // Verify admin credentials before allowing catalogue modifications
+            // Authenticate admin user
             var admin = _context.Accounts.FirstOrDefault(a =>
                 a.Email == email && a.Password == password && a.Role == "Admin");
 
             if (admin == null)
                 return Unauthorized("Access denied. Only Admins can manage the catalogue.");
 
-            return Ok(_catalogue.AddProductToCatalogue(productId));
+            // Add product to catalogue
+            return Ok(_catalogue.AddProduct(productId));
         }
 
-        // Remove a product from the catalogue (admin only)
+        // Remove a product from the catalogue (requires admin authentication)
         [HttpDelete("remove-product")]
         public IActionResult RemoveProductFromCatalogue(string email, string password, int productId)
         {
-            // Verify admin credentials before allowing catalogue modifications
+            // Authenticate admin user
             var admin = _context.Accounts.FirstOrDefault(a =>
                 a.Email == email && a.Password == password && a.Role == "Admin");
 
             if (admin == null)
                 return Unauthorized("Access denied. Only Admins can manage the catalogue.");
 
-            return Ok(_catalogue.RemoveProductFromCatalogue(productId));
+            // Remove product from catalogue
+            return Ok(_catalogue.RemoveProduct(productId));
         }
     }
 }

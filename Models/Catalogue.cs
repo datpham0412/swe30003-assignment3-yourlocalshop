@@ -6,12 +6,13 @@ namespace Assignment_3_SWE30003.Models
     {
         private readonly AppDbContext _context;
 
+        // Initialize catalogue service with database context
         public Catalogue(AppDbContext context)
         {
             _context = context;
         }
 
-        // Returns products that are marked as in the catalogue
+        // Retrieve all products that are currently listed in the catalogue
         public List<Product> GetCatalogueProducts()
         {
             return _context.Products
@@ -26,31 +27,37 @@ namespace Assignment_3_SWE30003.Models
                 .ToList();
         }
 
-        // Add a product to the product listings
-        public string AddProductToCatalogue(int productId)
+        // Mark a product as available in the catalogue
+        public string AddProduct(int productId)
         {
+            // Find product in database
             var product = _context.Products.FirstOrDefault(p => p.Id == productId);
             if (product == null)
                 return "Product not found.";
 
+            // Check if already in catalogue
             if (product.IsInCatalogue)
                 return $"'{product.Name}' is already in the catalogue.";
 
+            // Add to catalogue
             product.IsInCatalogue = true;
             _context.SaveChanges();
             return $"'{product.Name}' has been added to the catalogue.";
         }
 
-        // Remove a product from the product listings
-        public string RemoveProductFromCatalogue(int productId)
+        // Mark a product as unavailable in the catalogue
+        public string RemoveProduct(int productId)
         {
+            // Find product in database
             var product = _context.Products.FirstOrDefault(p => p.Id == productId);
             if (product == null)
                 return "Product not found.";
 
+            // Check if currently in catalogue
             if (!product.IsInCatalogue)
                 return $"'{product.Name}' is not currently in the catalogue.";
 
+            // Remove from catalogue
             product.IsInCatalogue = false;
             _context.SaveChanges();
             return $"'{product.Name}' has been removed from the catalogue.";

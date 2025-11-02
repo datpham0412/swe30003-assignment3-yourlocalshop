@@ -1,7 +1,5 @@
 # Introduction
 
-# Installation and User Manual
-
 # Development
 
 Guide for developers of the system

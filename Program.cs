@@ -17,8 +17,9 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite("Data Source=localshop.db"));
 
-// Register Catalogue as a scoped service (one instance per request)
+// Register Catalogue and Inventory as a scoped service (one instance per request)
 builder.Services.AddScoped<Catalogue>();
+builder.Services.AddScoped<Inventory>();
 
 builder.Services.AddCors(options =>
 {
