@@ -4,28 +4,23 @@ using Assignment_3_SWE30003.Data;
 
 namespace Assignment_3_SWE30003.Controllers
 {
-    [ApiController]
     [Route("api/[controller]")]
-    public class InventoryController : ControllerBase
+    public class InventoryController : BaseController
     {
-        private readonly AppDbContext _context;
         private readonly Inventory _inventory;
-        public InventoryController(AppDbContext context, Inventory inventory)
+        
+        public InventoryController(AppDbContext context, Inventory inventory) : base(context)
         {
-            _context = context;
             _inventory = inventory;
         }
 
         // Add a new product to the inventory (requires admin authentication)
         [HttpPost("add-product")]
-        public IActionResult AddProductToInventory(string email, string password, int productId, int quantity)
+        public IActionResult AddProductToInventory(int productId, int quantity)
         {
-            // Authenticate admin user
-            var admin = _context.Accounts.FirstOrDefault(a =>
-                a.Email == email && a.Password == password && a.Role == "Admin");
-
-            if (admin == null)
-                return Unauthorized("Access denied. Only Admins can add inventory records.");
+            // Authenticate admin user using BaseController
+            var (admin, error) = ValidateAdminAsync().Result;
+            if (error != null) return error;
 
             // Add product to inventory
             var result = _inventory.AddProduct(productId, quantity);
@@ -34,14 +29,11 @@ namespace Assignment_3_SWE30003.Controllers
 
         // Update the stock quantity of a product in inventory (requires admin authentication)
         [HttpPut("update-product")]
-        public IActionResult UpdateProductToInventory(string email, string password, int productId, int quantity)
+        public IActionResult UpdateProductToInventory(int productId, int quantity)
         {
-            // Authenticate admin user
-            var admin = _context.Accounts.FirstOrDefault(a =>
-                a.Email == email && a.Password == password && a.Role == "Admin");
-
-            if (admin == null)
-                return Unauthorized("Access denied. Only Admins can update inventory records.");
+            // Authenticate admin user using BaseController
+            var (admin, error) = ValidateAdminAsync().Result;
+            if (error != null) return error;
 
             // Update product quantity
             var result = _inventory.UpdateQuantity(productId, quantity);

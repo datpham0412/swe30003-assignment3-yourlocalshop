@@ -12,7 +12,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import Link from "next/link"
 import { LogOut, Search, CreditCard, Home, Package, FileText, LayoutDashboard, Truck, BarChart3 } from "lucide-react"
 import { toast } from "sonner"
-import PaymentProcessor from "@/components/admin/PaymentProcessor"
 import AdminNav from "@/components/admin/AdminNav"
 
 interface Order {
@@ -38,8 +37,6 @@ const getStatusColor = (status: string) => {
     Packed: "bg-purple-100 text-purple-800 border-purple-300",
     Shipped: "bg-indigo-100 text-indigo-800 border-indigo-300",
     Delivered: "bg-green-100 text-green-800 border-green-300",
-    Failed: "bg-red-100 text-red-800 border-red-300",
-    Cancelled: "bg-gray-100 text-gray-800 border-gray-300",
   }
   return colors[status] || "bg-gray-100 text-gray-800 border-gray-300"
 }
@@ -52,8 +49,6 @@ const statusMap: Record<string, number> = {
   Packed: 3,
   Shipped: 4,
   Delivered: 5,
-  Failed: 6,
-  Cancelled: 7,
 }
 
 export default function AdminOrdersPage() {
@@ -241,20 +236,9 @@ export default function AdminOrdersPage() {
                                 <SelectItem value="Packed">Packed</SelectItem>
                                 <SelectItem value="Shipped">Shipped</SelectItem>
                                 <SelectItem value="Delivered">Delivered</SelectItem>
-                                <SelectItem value="Failed">Failed</SelectItem>
-                                <SelectItem value="Cancelled">Cancelled</SelectItem>
                               </SelectContent>
                             </Select>
 
-                            {email && password && (
-                              <PaymentProcessor
-                                orderId={order.orderId}
-                                orderStatus={order.status}
-                                email={email}
-                                password={password}
-                                onPaymentProcessed={() => fetchOrders(email, password)}
-                              />
-                            )}
                             <Button variant="outline" size="sm" onClick={() => router.push(`/orders/${order.orderId}`)}>
                               View Details
                             </Button>

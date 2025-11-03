@@ -45,8 +45,6 @@ const getStatusColor = (status: string) => {
     Packed: "bg-purple-100 text-purple-800 border-purple-300",
     Shipped: "bg-indigo-100 text-indigo-800 border-indigo-300",
     Delivered: "bg-green-100 text-green-800 border-green-300",
-    Failed: "bg-red-100 text-red-800 border-red-300",
-    Cancelled: "bg-gray-100 text-gray-800 border-gray-300",
   }
   return colors[status] || "bg-gray-100 text-gray-800 border-gray-300"
 }
@@ -66,7 +64,6 @@ export default function OrdersPage() {
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [dataLoading, setDataLoading] = useState(false)
-  const [processingOrderId, setProcessingOrderId] = useState<number | null>(null)
   const [updatingStatusOrderId, setUpdatingStatusOrderId] = useState<number | null>(null)
 
   useEffect(() => {
@@ -133,42 +130,6 @@ export default function OrdersPage() {
   const handleLogout = () => {
     localStorage.clear()
     router.push("/auth")
-  }
-
-    const handleProcessPayment = async (orderId: number) => {
-    if (!email || !password) return
-
-    setProcessingOrderId(orderId)
-    try {
-      const response = await fetch(
-        `http://localhost:5074/api/Order/${orderId}/admin-pay?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`,
-        {
-          method: "POST",
-        },
-      )
-
-      if (response.ok) {
-        const result = await response.json()
-        toast.success("Payment processed successfully!", {
-          description: `Invoice ${result.invoiceNumber} generated. Shipment created.`,
-        })
-        // Refresh orders list
-        if (role) {
-          fetchOrders(email, password, role)
-        }
-      } else {
-        const errorText = await response.text()
-        toast.error("Payment processing failed", {
-          description: errorText || "Please try again.",
-        })
-      }
-    } catch (error) {
-      toast.error("Network error", {
-        description: "Unable to process payment.",
-      })
-    } finally {
-      setProcessingOrderId(null)
-    }
   }
 
   const handleUpdateStatus = async (orderId: number, newStatus: string) => {
@@ -378,24 +339,7 @@ export default function OrdersPage() {
                               <p className="text-2xl font-bold text-emerald-600">${order.total.toFixed(2)}</p>
                             </div>
                             <div className="flex flex-col gap-2">
-                              {order.status === "PendingPayment" && (
-                                <Button
-                                  onClick={() => handleProcessPayment(order.orderId)}
-                                  disabled={processingOrderId === order.orderId}
-                                  className="bg-gradient-to-r from-blue-600 to-green-500 hover:from-blue-700 hover:to-green-600"
-                                  size="sm"
-                                >
-                                  {processingOrderId === order.orderId ? (
-                                    <span className="flex items-center gap-2">
-                                      <Spinner className="h-3 w-3" />
-                                      Processing...
-                                    </span>
-                                  ) : (
-                                    "Process Payment"
-                                  )}
-                                </Button>
-                              )}
-                              {order.status !== "PendingPayment" && order.status !== "Cancelled" && (
+                              {order.status !== "PendingPayment" && (
                                 <div className="space-y-1">
                                   <label className="text-xs text-gray-500">Update Status:</label>
                                   <Select
@@ -407,22 +351,13 @@ export default function OrdersPage() {
                                     </SelectTrigger>
                                     <SelectContent>
                                       {order.status === "Paid" && (
-                                        <>
-                                          <SelectItem value="Processing">Processing</SelectItem>
-                                          <SelectItem value="Cancelled">Cancel</SelectItem>
-                                        </>
+                                        <SelectItem value="Processing">Processing</SelectItem>
                                       )}
                                       {order.status === "Processing" && (
-                                        <>
-                                          <SelectItem value="Packed">Packed</SelectItem>
-                                          <SelectItem value="Cancelled">Cancel</SelectItem>
-                                        </>
+                                        <SelectItem value="Packed">Packed</SelectItem>
                                       )}
                                       {order.status === "Packed" && (
-                                        <>
-                                          <SelectItem value="Shipped">Shipped</SelectItem>
-                                          <SelectItem value="Cancelled">Cancel</SelectItem>
-                                        </>
+                                        <SelectItem value="Shipped">Shipped</SelectItem>
                                       )}
                                       {order.status === "Shipped" && (
                                         <SelectItem value="Delivered">Delivered</SelectItem>

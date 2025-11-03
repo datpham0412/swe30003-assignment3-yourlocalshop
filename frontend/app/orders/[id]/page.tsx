@@ -6,9 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
 import { Badge } from "@/components/ui/badge"
-import { LogOut, Package, ArrowLeft, MapPin, Phone, User, FileText, Home, CreditCard, Truck, BarChart3, LayoutDashboard } from "lucide-react"
+import { ArrowLeft, MapPin, Phone, User, FileText, Package, Truck } from "lucide-react"
 import { toast } from "sonner"
-import Link from "next/link"
+import { AdminNav } from "@/components/admin/AdminNav"
+import { CustomerNav } from "@/components/customer/CustomerNav"
  
 interface OrderLine {
   productId: number
@@ -153,93 +154,13 @@ export default function OrderDetailPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-emerald-50">
       {/* Header - Different for Admin vs Customer */}
-      {role === "Admin" ? (
-        <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50 shadow-sm">
-          <div className="container mx-auto px-4 py-4">
-            <div className="flex items-center justify-between">
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-emerald-500 bg-clip-text text-transparent">
-                Your Local Shop — Admin
-              </h1>
-              <nav className="flex items-center gap-2">
-                <Link href="/">
-                  <Button variant="ghost" size="sm" className="hover:bg-purple-50">
-                    <Home className="h-4 w-4 mr-2" />
-                    Home
-                  </Button>
-                </Link>
-                <Link href="/orders">
-                  <Button variant="default" size="sm" className="bg-gradient-to-r from-purple-600 to-emerald-500">
-                    <Package className="h-4 w-4 mr-2" />
-                    Orders
-                  </Button>
-                </Link>
-                <Link href="/payments">
-                  <Button variant="ghost" size="sm" className="hover:bg-purple-50">
-                    <CreditCard className="h-4 w-4 mr-2" />
-                    Payments
-                  </Button>
-                </Link>
-                <Link href="/invoices">
-                  <Button variant="ghost" size="sm" className="hover:bg-purple-50">
-                    <FileText className="h-4 w-4 mr-2" />
-                    Invoices
-                  </Button>
-                </Link>
-                <Link href="/shipments">
-                  <Button variant="ghost" size="sm" className="hover:bg-purple-50">
-                    <Truck className="h-4 w-4 mr-2" />
-                    Shipments
-                  </Button>
-                </Link>
-                <Link href="/reports">
-                  <Button variant="ghost" size="sm" className="hover:bg-purple-50">
-                    <BarChart3 className="h-4 w-4 mr-2" />
-                    Reports
-                  </Button>
-                </Link>
-                <Link href="/dashboard/admin">
-                  <Button variant="ghost" size="sm" className="hover:bg-purple-50">
-                    <LayoutDashboard className="h-4 w-4 mr-2" />
-                    Admin
-                  </Button>
-                </Link>
-                <Button
-                  onClick={handleLogout}
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-2 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-colors ml-2 bg-transparent"
-                >
-                  <LogOut className="h-4 w-4" />
-                  Logout
-                </Button>
-              </nav>
-            </div>
-          </div>
-        </header>
-      ) : (
-        <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50 shadow-sm">
-          <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-emerald-500 bg-clip-text text-transparent">
-              Your Local Shop
-            </h1>
-            <Button
-              onClick={handleLogout}
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-2 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-colors bg-transparent"
-            >
-              <LogOut className="h-4 w-4" />
-              Logout
-            </Button>
-          </div>
-        </header>
-      )}
+      {role === "Admin" ? <AdminNav /> : <CustomerNav />}
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8 max-w-6xl">
         <div className="mb-6">
           <Button
-            onClick={() => router.push("/orders")}
+            onClick={() => router.push(role === "Admin" ? "/orders/admin" : "/orders")}
             variant="ghost"
             className="flex items-center gap-2 text-purple-600 hover:text-purple-700"
           >

@@ -5,28 +5,22 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Assignment_3_SWE30003.Controllers
 {
-    [ApiController]
     [Route("api/[controller]")]
-    public class InvoiceController : ControllerBase
+    public class InvoiceController : BaseController
     {
-        private readonly AppDbContext _context;
-
-        public InvoiceController(AppDbContext context)
+        public InvoiceController(AppDbContext context) : base(context)
         {
-            _context = context;
         }
 
         [HttpGet("{orderId}")]
-        public async Task<IActionResult> GetInvoiceForOrder([FromQuery] string email, [FromQuery] string password, int orderId)
+        public async Task<IActionResult> GetInvoiceForOrder(int orderId)
         {
             try
             {
-                var user = await _context.Accounts
-                    .FirstOrDefaultAsync(a => a.Email == email && a.Password == password);
-
+                var user = await AuthenticateUserAsync();
                 if (user == null)
                 {
-                    return Unauthorized("Invalid credentials.");
+                    return UnauthorizedResponse();
                 }
 
                 var invoice = await _context.Invoices
@@ -73,17 +67,12 @@ namespace Assignment_3_SWE30003.Controllers
         }
 
         [HttpGet("list")]
-        public async Task<IActionResult> GetAllInvoices([FromQuery] string email, [FromQuery] string password)
+        public async Task<IActionResult> GetAllInvoices()
         {
             try
             {
-                var admin = await _context.Accounts
-                    .FirstOrDefaultAsync(a => a.Email == email && a.Password == password && a.Role == "Admin");
-
-                if (admin == null)
-                {
-                    return Unauthorized("Invalid credentials or not an admin account.");
-                }
+                var (admin, error) = await ValidateAdminAsync();
+                if (error != null) return error;
 
                 var invoices = await _context.Invoices
                     .Include(i => i.Payment)

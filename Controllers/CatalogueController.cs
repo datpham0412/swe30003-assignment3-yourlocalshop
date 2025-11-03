@@ -4,17 +4,14 @@ using Assignment_3_SWE30003.Data;
 
 namespace Assignment_3_SWE30003.Controllers
 {
-    [ApiController]
     [Route("api/[controller]")]
-    public class CatalogueController : ControllerBase
+    public class CatalogueController : BaseController
     {
-        private readonly AppDbContext _context;
         private readonly Catalogue _catalogue;
 
         // Initialize controller with database context and catalogue service
-        public CatalogueController(AppDbContext context, Catalogue catalogue)
+        public CatalogueController(AppDbContext context, Catalogue catalogue) : base(context)
         {
-            _context = context;
             _catalogue = catalogue;
         }
 
@@ -28,14 +25,11 @@ namespace Assignment_3_SWE30003.Controllers
 
         // Add a product to the catalogue (requires admin authentication)
         [HttpPost("add-product")]
-        public IActionResult AddProductToCatalogue(string email, string password, int productId)
+        public IActionResult AddProductToCatalogue(int productId)
         {
-            // Authenticate admin user
-            var admin = _context.Accounts.FirstOrDefault(a =>
-                a.Email == email && a.Password == password && a.Role == "Admin");
-
-            if (admin == null)
-                return Unauthorized("Access denied. Only Admins can manage the catalogue.");
+            // Authenticate admin user using BaseController
+            var (admin, error) = ValidateAdminAsync().Result;
+            if (error != null) return error;
 
             // Add product to catalogue
             return Ok(_catalogue.AddProduct(productId));
@@ -43,14 +37,11 @@ namespace Assignment_3_SWE30003.Controllers
 
         // Remove a product from the catalogue (requires admin authentication)
         [HttpDelete("remove-product")]
-        public IActionResult RemoveProductFromCatalogue(string email, string password, int productId)
+        public IActionResult RemoveProductFromCatalogue(int productId)
         {
-            // Authenticate admin user
-            var admin = _context.Accounts.FirstOrDefault(a =>
-                a.Email == email && a.Password == password && a.Role == "Admin");
-
-            if (admin == null)
-                return Unauthorized("Access denied. Only Admins can manage the catalogue.");
+            // Authenticate admin user using BaseController
+            var (admin, error) = ValidateAdminAsync().Result;
+            if (error != null) return error;
 
             // Remove product from catalogue
             return Ok(_catalogue.RemoveProduct(productId));
