@@ -5,34 +5,22 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Assignment_3_SWE30003.Controllers
 {
-    [ApiController]
     [Route("api/[controller]")]
-    public class SalesReportController : ControllerBase
+    public class SalesReportController : BaseController
     {
-        private readonly AppDbContext _context;
-
-        public SalesReportController(AppDbContext context)
+        public SalesReportController(AppDbContext context) : base(context)
         {
-            _context = context;
         }
 
         // Generate a sales report for a specific time period (admin only)
         [HttpGet("generate")]
-        public async Task<IActionResult> GenerateSalesReport(
-            [FromQuery] string email,
-            [FromQuery] string password,
-            [FromQuery] ReportPeriod period)
+        public async Task<IActionResult> GenerateSalesReport([FromQuery] ReportPeriod period)
         {
             try
             {
-                // Verify that the user is an admin
-                var admin = await _context.Accounts
-                    .FirstOrDefaultAsync(a => a.Email == email && a.Password == password && a.Role == "Admin");
-
-                if (admin == null)
-                {
-                    return Unauthorized("Invalid credentials or not an admin account.");
-                }
+                // Verify that the user is an admin using BaseController
+                var (admin, error) = await ValidateAdminAsync();
+                if (error != null) return error;
 
                 // Get all paid/delivered orders within the specified time period
                 var orders = await GetOrdersInPeriod(period) ?? new List<Order>();

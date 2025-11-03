@@ -5,31 +5,23 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Assignment_3_SWE30003.Controllers
 {
-    [ApiController]
     [Route("api/[controller]")]
-    public class ShipmentController : ControllerBase
+    public class ShipmentController : BaseController
     {
-        private readonly AppDbContext _context;
         private readonly EmailSender _emailSender;
 
-        public ShipmentController(AppDbContext context, EmailSender emailSender)
+        public ShipmentController(AppDbContext context, EmailSender emailSender) : base(context)
         {
-            _context = context;
             _emailSender = emailSender;
         }
 
         [HttpGet("list")]
-        public async Task<IActionResult> GetAllShipments([FromQuery] string email, [FromQuery] string password)
+        public async Task<IActionResult> GetAllShipments()
         {
             try
             {
-                var admin = await _context.Accounts
-                    .FirstOrDefaultAsync(a => a.Email == email && a.Password == password && a.Role == "Admin");
-
-                if (admin == null)
-                {
-                    return Unauthorized("Invalid credentials or not an admin account.");
-                }
+                var (admin, error) = await ValidateAdminAsync();
+                if (error != null) return error;
 
                 var shipments = await _context.Shipments
                     .Include(s => s.Order)
@@ -65,21 +57,14 @@ namespace Assignment_3_SWE30003.Controllers
 
         [HttpPut("update")]
         public async Task<IActionResult> UpdateShipment(
-            [FromQuery] string email,
-            [FromQuery] string password,
             [FromQuery] int orderId,
             [FromQuery] ShipmentStatus status,
             [FromQuery] DateTime? deliveryDate = null)
         {
             try
             {
-                var admin = await _context.Accounts
-                    .FirstOrDefaultAsync(a => a.Email == email && a.Password == password && a.Role == "Admin");
-
-                if (admin == null)
-                {
-                    return Unauthorized("Invalid credentials or not an admin account.");
-                }
+                var (admin, error) = await ValidateAdminAsync();
+                if (error != null) return error;
 
                 var shipment = await _context.Shipments
                     .Include(s => s.Order)

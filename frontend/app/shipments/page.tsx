@@ -157,12 +157,12 @@ export default function ShipmentsPage() {
     const statusLower = status.toLowerCase()
     if (statusLower === "delivered") {
       return "bg-green-100 text-green-800 border-green-200"
+    } else if (statusLower === "dispatched") {
+      return "bg-purple-100 text-purple-800 border-purple-200"
     } else if (statusLower === "intransit") {
       return "bg-blue-100 text-blue-800 border-blue-200"
     } else if (statusLower === "pending") {
       return "bg-yellow-100 text-yellow-800 border-yellow-200"
-    } else if (statusLower === "failed") {
-      return "bg-red-100 text-red-800 border-red-200"
     }
     return "bg-gray-100 text-gray-800 border-gray-200"
   }
@@ -270,9 +270,9 @@ export default function ShipmentsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Pending">Pending</SelectItem>
+                  <SelectItem value="Dispatched">Dispatched</SelectItem>
                   <SelectItem value="InTransit">In Transit</SelectItem>
                   <SelectItem value="Delivered">Delivered</SelectItem>
-                  <SelectItem value="Failed">Failed</SelectItem>
                 </SelectContent>
               </Select>
             </div>

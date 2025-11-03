@@ -6,42 +6,34 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Assignment_3_SWE30003.Controllers
 {
-    [ApiController]
     [Route("api/[controller]")]
-    public class ShoppingCartController : ControllerBase
+    public class ShoppingCartController : BaseController
     {
-        private readonly AppDbContext _context;
         private const decimal TAX_RATE = 0.10m;
 
         // Initialize controller with database context
-        public ShoppingCartController(AppDbContext context)
+        public ShoppingCartController(AppDbContext context) : base(context)
         {
-            _context = context;
         }
 
         // Add a product to the customer's shopping cart (requires customer authentication)
         [HttpPost("add")]
-        public async Task<IActionResult> AddToCart([FromQuery] string email, [FromQuery] string password, [FromBody] AddToCartRequest request)
+        public async Task<IActionResult> AddToCart([FromBody] AddToCartRequest request)
         {
             try
             {
-                // Authenticate customer
-                var customer = await _context.Accounts
-                    .FirstOrDefaultAsync(a => a.Email == email && a.Password == password && a.Role == "Customer");
-
-                if (customer == null)
-                {
-                    return Unauthorized("Invalid credentials or not a customer account.");
-                }
+                // Authenticate customer using BaseController
+                var (customer, error) = await ValidateCustomerAsync();
+                if (error != null) return error;
 
                 // Get or create shopping cart
                 var cart = await _context.ShoppingCarts
                     .Include(c => c.Items)
-                    .FirstOrDefaultAsync(c => c.CustomerId == customer.Id);
+                    .FirstOrDefaultAsync(c => c.CustomerId == customer!.Id);
 
                 if (cart == null)
                 {
-                    cart = new ShoppingCart { CustomerId = customer.Id };
+                    cart = new ShoppingCart { CustomerId = customer!.Id };
                     _context.ShoppingCarts.Add(cart);
                     await _context.SaveChangesAsync();
                 }
@@ -89,23 +81,18 @@ namespace Assignment_3_SWE30003.Controllers
 
         // Update the quantity of an existing item in the shopping cart (requires customer authentication)
         [HttpPut("update")]
-        public async Task<IActionResult> UpdateCartItem([FromQuery] string email, [FromQuery] string password, [FromBody] UpdateCartItemRequest request)
+        public async Task<IActionResult> UpdateCartItem([FromBody] UpdateCartItemRequest request)
         {
             try
             {
-                // Authenticate customer
-                var customer = await _context.Accounts
-                    .FirstOrDefaultAsync(a => a.Email == email && a.Password == password && a.Role == "Customer");
-
-                if (customer == null)
-                {
-                    return Unauthorized("Invalid credentials or not a customer account.");
-                }
+                // Authenticate customer using BaseController
+                var (customer, error) = await ValidateCustomerAsync();
+                if (error != null) return error;
 
                 // Get customer's cart
                 var cart = await _context.ShoppingCarts
                     .Include(c => c.Items)
-                    .FirstOrDefaultAsync(c => c.CustomerId == customer.Id);
+                    .FirstOrDefaultAsync(c => c.CustomerId == customer!.Id);
 
                 if (cart == null)
                 {
@@ -163,23 +150,18 @@ namespace Assignment_3_SWE30003.Controllers
 
         // Remove an item from the shopping cart (requires customer authentication)
         [HttpDelete("remove")]
-        public async Task<IActionResult> RemoveFromCart([FromQuery] string email, [FromQuery] string password, [FromBody] RemoveFromCartRequest request)
+        public async Task<IActionResult> RemoveFromCart([FromBody] RemoveFromCartRequest request)
         {
             try
             {
-                // Authenticate customer
-                var customer = await _context.Accounts
-                    .FirstOrDefaultAsync(a => a.Email == email && a.Password == password && a.Role == "Customer");
-
-                if (customer == null)
-                {
-                    return Unauthorized("Invalid credentials or not a customer account.");
-                }
+                // Authenticate customer using BaseController
+                var (customer, error) = await ValidateCustomerAsync();
+                if (error != null) return error;
 
                 // Get customer's cart
                 var cart = await _context.ShoppingCarts
                     .Include(c => c.Items)
-                    .FirstOrDefaultAsync(c => c.CustomerId == customer.Id);
+                    .FirstOrDefaultAsync(c => c.CustomerId == customer!.Id);
 
                 if (cart == null)
                 {
@@ -206,23 +188,18 @@ namespace Assignment_3_SWE30003.Controllers
 
         // Retrieve the customer's current shopping cart with all items (requires customer authentication)
         [HttpGet("list")]
-        public async Task<IActionResult> GetCart([FromQuery] string email, [FromQuery] string password)
+        public async Task<IActionResult> GetCart()
         {
             try
             {
-                // Authenticate customer
-                var customer = await _context.Accounts
-                    .FirstOrDefaultAsync(a => a.Email == email && a.Password == password && a.Role == "Customer");
-
-                if (customer == null)
-                {
-                    return Unauthorized("Invalid credentials or not a customer account.");
-                }
+                // Authenticate customer using BaseController
+                var (customer, error) = await ValidateCustomerAsync();
+                if (error != null) return error;
 
                 // Get customer's cart
                 var cart = await _context.ShoppingCarts
                     .Include(c => c.Items)
-                    .FirstOrDefaultAsync(c => c.CustomerId == customer.Id);
+                    .FirstOrDefaultAsync(c => c.CustomerId == customer!.Id);
 
                 // Return empty cart if none exists
                 if (cart == null)

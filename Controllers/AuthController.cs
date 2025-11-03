@@ -7,17 +7,14 @@ using Assignment_3_SWE30003.Models;
 
 namespace Assignment_3_SWE30003.Controllers
 {
-    [ApiController]
     [Route("api/[controller]")]
-    public class AuthController : ControllerBase
+    public class AuthController : BaseController
     {
         private readonly AccountManager _manager;
-        private readonly AppDbContext _context;
         private readonly EmailSender _emailSender;
 
-        public AuthController(AppDbContext context, AccountManager manager, EmailSender emailSender)
+        public AuthController(AppDbContext context, AccountManager manager, EmailSender emailSender) : base(context)
         {
-            _context = context;
             _manager = manager;
             _emailSender = emailSender;
             
@@ -76,11 +73,10 @@ namespace Assignment_3_SWE30003.Controllers
         }
 
         [HttpGet("list")]
-        public IActionResult List(string email, string password)
+        public IActionResult List()
         {
-            var user = _manager.Authenticate(email, password);
-            if (user == null || user.Role != "Admin")
-                return Unauthorized("Admin credentials required.");
+            var (admin, error) = ValidateAdminAsync().Result;
+            if (error != null) return error;
 
             var accounts = _manager.ListAccounts();
             var safe = accounts.Select(a => new { a.Id, a.Email, a.Role, a.Status }).ToList();
@@ -166,10 +162,10 @@ namespace Assignment_3_SWE30003.Controllers
         }
 
         [HttpGet("me")]
-        public IActionResult Me(string email, string password)
+        public IActionResult Me()
         {
-            var user = _manager.Authenticate(email, password);
-            if (user == null) return Unauthorized(new { message = "Invalid credentials." });
+            var user = AuthenticateUserAsync().Result;
+            if (user == null) return UnauthorizedResponse("Invalid credentials.");
 
             // Return account info (including password because the app stores it in plaintext).
             return Ok(new { id = user.Id, name = user.Name, email = user.Email, phone = user.Phone, password = user.Password, role = user.Role });
