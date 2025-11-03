@@ -13,11 +13,16 @@ namespace Assignment_3_SWE30003.Controllers
     {
         private readonly AccountManager _manager;
         private readonly AppDbContext _context;
+        private readonly EmailSender _emailSender;
 
-        public AuthController(AppDbContext context)
+        public AuthController(AppDbContext context, AccountManager manager, EmailSender emailSender)
         {
             _context = context;
-            _manager = new AccountManager(context);
+            _manager = manager;
+            _emailSender = emailSender;
+            
+            // Attach EmailSender as observer to AccountManager
+            _manager.Attach(_emailSender);
         }
 
     public class RegisterDto { public string? Name { get; set; } public string? Email { get; set; } public string? Password { get; set; } public string? Phone { get; set; } }

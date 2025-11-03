@@ -8,7 +8,7 @@ namespace Assignment_3_SWE30003.Models
         Delivered
     }
 
-    public class Shipment
+    public class Shipment : EmailNotifier
     {
         public int Id { get; set; }
         public int OrderId { get; set; }
@@ -21,34 +21,22 @@ namespace Assignment_3_SWE30003.Models
         public Order Order { get; set; } = default!;
 
         // Update shipment details (status, delivery date)
-        public void UpdateStatus(ShipmentStatus newStatus, DateTime? deliveryDate = null)
+        public void UpdateStatus(ShipmentStatus newStatus, string customerEmail, DateTime? deliveryDate = null)
         {
             Status = newStatus;
             if (newStatus == ShipmentStatus.Delivered)
                 DeliveryDate = deliveryDate ?? DateTime.UtcNow;
-        }
-        // Notify EmailSender when order is shipped (3.3.6)
-        public string NotifyEmailSender()
-        {
-            if (Status == ShipmentStatus.Dispatched)
+            
+            // Notify observers only when dispatched
+            if (newStatus == ShipmentStatus.Dispatched)
             {
-                return EmailSender.Send(
-                    to: "customer@example.com",
-                    subject: $"Shipment Dispatched — Order #{OrderId}",
-                    body: $"Your shipment has been dispatched. Tracking number: {TrackingNumber}. You can expect delivery soon."
-                );
+                NotifyObservers("ShipmentDispatched", new Dictionary<string, object>
+                {
+                    { "Email", customerEmail },
+                    { "OrderId", OrderId },
+                    { "TrackingNumber", TrackingNumber }
+                });
             }
-
-            if (Status == ShipmentStatus.Delivered)
-            {
-                return EmailSender.Send(
-                    to: "customer@example.com",
-                    subject: $"Order Delivered — Order #{OrderId}",
-                    body: $"Your order has been successfully delivered to {Address}. Thank you for your business!"
-                );
-            }
-
-            return string.Empty;
         }
     }
 }

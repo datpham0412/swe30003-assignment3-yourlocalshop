@@ -88,6 +88,9 @@ namespace Assignment_3_SWE30003.Data
             modelBuilder.Entity<SalesReport>()
                 .Property(sr => sr.Period)
                 .HasConversion<string>();
+
+            // Ignore EmailNotifier base class (Observer pattern) - not part of database schema
+            modelBuilder.Ignore<EmailNotifier>();
         }
     }
 }

@@ -1,5 +1,6 @@
 using Assignment_3_SWE30003.Data;
 using Assignment_3_SWE30003.Models;
+using Assignment_3_SWE30003.Managers;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 
@@ -17,9 +18,15 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite("Data Source=localshop.db"));
 
+// Register EmailSender as a singleton (one instance for the application lifetime)
+builder.Services.AddSingleton<EmailSender>();
+
 // Register Catalogue and Inventory as a scoped service (one instance per request)
 builder.Services.AddScoped<Catalogue>();
 builder.Services.AddScoped<Inventory>();
+
+// Register AccountManager as a scoped service
+builder.Services.AddScoped<AccountManager>();
 
 builder.Services.AddCors(options =>
 {
@@ -30,6 +37,9 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+// Wire up Observer pattern: Attach EmailSender to all Subject instances
+var emailSender = app.Services.GetRequiredService<EmailSender>();
 
 if (app.Environment.IsDevelopment())
 {

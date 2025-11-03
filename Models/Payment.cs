@@ -7,7 +7,7 @@ namespace Assignment_3_SWE30003.Models
         Failed
     }
 
-    public class Payment
+    public class Payment : EmailNotifier
     {
         public int Id { get; set; }
         public int OrderId { get; set; }
@@ -41,7 +41,7 @@ namespace Assignment_3_SWE30003.Models
         public Payment() { }
 
         // Process payment
-        public void ProcessPayment(Action<int, int> deductStock)
+        public void ProcessPayment(Action<int, int> deductStock, string customerEmail)
         {
             Status = PaymentStatus.Success;
             PaymentDate = DateTime.UtcNow;
@@ -49,13 +49,21 @@ namespace Assignment_3_SWE30003.Models
             Order.SetStatusPaid();
 
             Order.ApplyStockDeduction(deductStock);
+            
+            // Notify observers about payment completion
+            NotifyObservers("PaymentCompleted", new Dictionary<string, object>
+            {
+                { "Email", customerEmail },
+                { "OrderId", OrderId },
+                { "Amount", Amount }
+            });
         }
 
         // Generate invoice after payment is saved (needs PaymentId)
-        public void GenerateInvoice()
+        public void GenerateInvoice(string customerEmail)
         {
             Invoice = new Invoice(this);
-            Invoice.Generate();
+            Invoice.Generate(customerEmail);
         }
     }
 }

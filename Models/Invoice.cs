@@ -1,6 +1,6 @@
 namespace Assignment_3_SWE30003.Models
 {
-    public class Invoice
+    public class Invoice : EmailNotifier
     {
         public int Id { get; set; }
         public int PaymentId { get; set; }
@@ -30,7 +30,7 @@ namespace Assignment_3_SWE30003.Models
         }
 
         // Generates invoice content
-        public void Generate()
+        public void Generate(string customerEmail)
         {
             if (Payment == null)
             {
@@ -40,6 +40,15 @@ namespace Assignment_3_SWE30003.Models
             InvoiceNumber = $"INV-{Payment.OrderId}-{DateTime.UtcNow:yyyyMMddHHmmss}";
             Amount = Payment.Amount;
             IssueDate = DateTime.UtcNow;
+            
+            // Notify observers about invoice generation
+            NotifyObservers("InvoiceGenerated", new Dictionary<string, object>
+            {
+                { "Email", customerEmail },
+                { "InvoiceNumber", InvoiceNumber },
+                { "Amount", Amount },
+                { "OrderId", Payment.OrderId }
+            });
         }
     }
 }

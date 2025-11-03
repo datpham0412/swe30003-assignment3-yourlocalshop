@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace Assignment_3_SWE30003.Managers
 {
-    public class AccountManager
+    public class AccountManager : EmailNotifier
     {
         private readonly AppDbContext _context;
 
@@ -39,7 +39,13 @@ namespace Assignment_3_SWE30003.Managers
             _context.Accounts.Add(newAccount);
             _context.SaveChanges();
 
-            NotifyEmailSender(email);
+            // Notify observers about account creation
+            NotifyObservers("AccountCreated", new Dictionary<string, object>
+            {
+                { "Email", normalizedEmail },
+                { "Name", name.Trim() }
+            });
+            
             return "Customer account created successfully!";
         }
 
@@ -67,7 +73,13 @@ namespace Assignment_3_SWE30003.Managers
             _context.Accounts.Add(newAccount);
             _context.SaveChanges();
 
-            NotifyEmailSender(email);
+            // Notify observers about account creation
+            NotifyObservers("AccountCreated", new Dictionary<string, object>
+            {
+                { "Email", normalizedEmail },
+                { "Name", name.Trim() }
+            });
+            
             return $"{role} account created successfully!";
         }
 
