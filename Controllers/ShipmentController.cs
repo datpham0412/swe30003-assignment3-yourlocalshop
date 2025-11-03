@@ -10,10 +10,12 @@ namespace Assignment_3_SWE30003.Controllers
     public class ShipmentController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly EmailSender _emailSender;
 
-        public ShipmentController(AppDbContext context)
+        public ShipmentController(AppDbContext context, EmailSender emailSender)
         {
             _context = context;
+            _emailSender = emailSender;
         }
 
         [HttpGet("list")]
@@ -87,17 +89,31 @@ namespace Assignment_3_SWE30003.Controllers
                 {
                     return NotFound("Shipment not found for the specified order.");
                 }
+                
+                // Get customer email for notifications
+                var customer = await _context.Accounts
+                    .FirstOrDefaultAsync(a => a.Id == shipment.Order.CustomerId);
+                
+                if (customer == null)
+                {
+                    return NotFound("Customer not found for this shipment.");
+                }
+                
+                // Attach EmailSender as observer
+                shipment.Attach(_emailSender);
 
-                shipment.UpdateStatus(status, deliveryDate);
-
-                var emailMessage = shipment.NotifyEmailSender();
+                shipment.UpdateStatus(status, customer.Email, deliveryDate);
 
                 await _context.SaveChangesAsync();
 
+                // Determine email notification message based on status
+                var emailNotification = status == ShipmentStatus.Dispatched 
+                    ? "Shipment dispatch notification email has been sent to customer."
+                    : "Shipment status updated.";
+
                 return Ok(new
                 {
-                    Message = "Shipment updated successfully.",
-                    EmailNotification = emailMessage,
+                    Message = $"Shipment updated successfully. {emailNotification}",
                     Shipment = new
                     {
                         shipment.Id,

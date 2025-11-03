@@ -12,10 +12,12 @@ namespace Assignment_3_SWE30003.Controllers
     public class OrderController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly EmailSender _emailSender;
 
-        public OrderController(AppDbContext context)
+        public OrderController(AppDbContext context, EmailSender emailSender)
         {
             _context = context;
+            _emailSender = emailSender;
         }
 
         [HttpPost("create")]
@@ -66,16 +68,12 @@ namespace Assignment_3_SWE30003.Controllers
 
                 await _context.SaveChangesAsync();
 
-                // Send email notification for order creation
-                var emailNotification = EmailSender.Send(
-                    to: customer.Email,
-                    subject: $"Order Confirmation — Order #{order.Id}",
-                    body: $"Thank you for your order! Order #{order.Id} has been successfully created. Total: ${order.Total:F2}. Please proceed to payment to complete your purchase."
-                );
-
+                // Order created successfully - email will be sent after payment
+                
                 var response = MapToOrderResponse(order);
                 return Ok(new
                 {
+                    message = "Order created successfully! Please proceed to payment.",
                     response.OrderId,
                     response.Status,
                     response.CreatedAt,
@@ -87,8 +85,7 @@ namespace Assignment_3_SWE30003.Controllers
                     response.ContactName,
                     response.ContactPhone,
                     response.Note,
-                    response.Shipment,
-                    emailNotification = emailNotification
+                    response.Shipment
                 });
             }
             catch (Exception ex)
@@ -298,6 +295,9 @@ namespace Assignment_3_SWE30003.Controllers
 
                 // Payment constructor validates order status and takes ownership of order
                 var payment = new Payment(order);
+                
+                // Attach EmailSender as observer
+                payment.Attach(_emailSender);
 
                 _context.Payments.Add(payment);
 
@@ -316,7 +316,7 @@ namespace Assignment_3_SWE30003.Controllers
                     {
                         throw new InvalidOperationException($"Inventory not found for product ID {productId}");
                     }
-                });
+                }, customer.Email);
 
                 var shipment = new Shipment()
                 {
@@ -331,9 +331,11 @@ namespace Assignment_3_SWE30003.Controllers
                 await _context.SaveChangesAsync();
 
                 // Generate invoice after payment has Id
-                payment.GenerateInvoice();
+                payment.GenerateInvoice(customer.Email);
                 if (payment.Invoice != null)
                 {
+                    // Attach EmailSender as observer to Invoice
+                    payment.Invoice.Attach(_emailSender);
                     _context.Invoices.Add(payment.Invoice);
                     await _context.SaveChangesAsync();
                 }
@@ -348,7 +350,7 @@ namespace Assignment_3_SWE30003.Controllers
                     orderStatus = payment.Order.Status.ToString(),
                     invoiceId = payment.Invoice?.Id,
                     invoiceNumber = payment.Invoice?.InvoiceNumber,
-                    message = "Payment processed successfully. Invoice generated."
+                    message = "Payment processed successfully! Confirmation email and invoice have been sent to your email."
                 });
             }
             catch (InvalidOperationException ex)
@@ -383,6 +385,15 @@ namespace Assignment_3_SWE30003.Controllers
                 {
                     return NotFound("Order not found.");
                 }
+                
+                // Get customer email for notifications
+                var customer = await _context.Accounts
+                    .FirstOrDefaultAsync(a => a.Id == order.CustomerId);
+                
+                if (customer == null)
+                {
+                    return NotFound("Customer not found for this order.");
+                }
 
                 var existingPayment = await _context.Payments
                     .FirstOrDefaultAsync(p => p.OrderId == orderId);
@@ -397,6 +408,9 @@ namespace Assignment_3_SWE30003.Controllers
                 {
                     Method = "Admin Processed"
                 };
+                
+                // Attach EmailSender as observer
+                payment.Attach(_emailSender);
 
                 _context.Payments.Add(payment);
 
@@ -415,7 +429,7 @@ namespace Assignment_3_SWE30003.Controllers
                     {
                         throw new InvalidOperationException($"Inventory not found for product ID {productId}");
                     }
-                });
+                }, customer.Email);
 
                 var shipment = new Shipment
                 {
@@ -430,9 +444,11 @@ namespace Assignment_3_SWE30003.Controllers
                 await _context.SaveChangesAsync();
 
                 // Generate invoice after payment has Id
-                payment.GenerateInvoice();
+                payment.GenerateInvoice(customer.Email);
                 if (payment.Invoice != null)
                 {
+                    // Attach EmailSender as observer to Invoice
+                    payment.Invoice.Attach(_emailSender);
                     _context.Invoices.Add(payment.Invoice);
                     await _context.SaveChangesAsync();
                 }
@@ -448,7 +464,7 @@ namespace Assignment_3_SWE30003.Controllers
                     invoiceId = payment.Invoice?.Id,
                     invoiceNumber = payment.Invoice?.InvoiceNumber,
                     shipmentId = shipment.Id,
-                    message = "Payment processed successfully by admin. Invoice and shipment generated."
+                    message = "Payment processed successfully by admin. Confirmation email and invoice have been sent to the customer."
                 });
             }
             catch (InvalidOperationException ex)

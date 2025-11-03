@@ -5,9 +5,17 @@ import { useRouter, useParams } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
-import { CreditCard, ArrowLeft, CheckCircle } from "lucide-react"
+import { CreditCard, ArrowLeft, CheckCircle, Mail } from "lucide-react"
 import { toast } from "sonner"
 import { CustomerNav } from "@/components/customer/CustomerNav"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
 interface OrderLine {
   productId: number
@@ -35,6 +43,12 @@ export default function PaymentProcessPage() {
   const [loading, setLoading] = useState(true)
   const [processing, setProcessing] = useState(false)
   const [order, setOrder] = useState<Order | null>(null)
+  const [showEmailModal, setShowEmailModal] = useState(false)
+  const [emailDetails, setEmailDetails] = useState({
+    recipient: "",
+    subject: "",
+    message: "",
+  })
 
   useEffect(() => {
     const storedEmail = localStorage.getItem("email")
@@ -109,13 +123,25 @@ export default function PaymentProcessPage() {
         const data = await response.json()
         console.log("Payment response:", data)
         
+        const email = localStorage.getItem("email")
+        
+        // Show email confirmation modal
+        setEmailDetails({
+          recipient: email || "",
+          subject: `Payment Confirmation & Invoice — Order #${orderId}`,
+          message: `Payment processed successfully! Your payment for Order #${orderId} has been confirmed. Total: $${order?.total.toFixed(2)}. This email contains your payment confirmation and invoice details.`,
+        })
+        setShowEmailModal(true)
+        
         toast.success("Payment successful!", {
           description: "Invoice generated. Redirecting...",
           icon: <CheckCircle className="h-5 w-5" />,
         })
+        
+        // Redirect after showing modal
         setTimeout(() => {
           router.push(`/invoices/${orderId}`)
-        }, 1500)
+        }, 4000)
       } else {
         const errorText = await response.text()
         console.error("Payment error:", errorText)
@@ -234,6 +260,51 @@ export default function PaymentProcessPage() {
           </CardContent>
         </Card>
       </main>
+
+      {/* Email Confirmation Modal */}
+      <Dialog open={showEmailModal} onOpenChange={setShowEmailModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-3 bg-green-100 rounded-full">
+                <Mail className="h-6 w-6 text-green-600" />
+              </div>
+              <DialogTitle className="text-xl">Email Sent Successfully!</DialogTitle>
+            </div>
+            <DialogDescription>
+              A confirmation email has been sent to your email address.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <p className="text-sm font-semibold text-gray-700">Recipient:</p>
+              <p className="text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded">{emailDetails.recipient}</p>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-sm font-semibold text-gray-700">Subject:</p>
+              <p className="text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded">{emailDetails.subject}</p>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-sm font-semibold text-gray-700">Message:</p>
+              <div className="text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded max-h-32 overflow-y-auto">
+                {emailDetails.message}
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              onClick={() => setShowEmailModal(false)}
+              className="w-full bg-gradient-to-r from-purple-600 to-emerald-500 hover:from-purple-700 hover:to-emerald-600"
+            >
+              Continue
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
