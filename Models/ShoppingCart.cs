@@ -1,5 +1,6 @@
 namespace Assignment_3_SWE30003.Models
 {
+    // Represents a customer's shopping cart containing items, with subtotal, tax, and total calculations.
     public class ShoppingCart
     {
         public int Id { get; set; }
@@ -9,8 +10,7 @@ namespace Assignment_3_SWE30003.Models
         public decimal Tax { get; private set; }
         public decimal Total { get; private set; }
 
-        // Accept a pre-initialized CartItem (created by ShoppingCartController).
-        // Manage shopping cart items
+        // Adds a new item to the cart or updates quantity if item already exists, respecting available stock.
         public void AddItem(CartItem newItem, int availableQty)
         {
             if (availableQty == 0)
@@ -18,8 +18,10 @@ namespace Assignment_3_SWE30003.Models
                 throw new InvalidOperationException("Product is out of stock.");
             }
 
+            // Limit quantity to available stock
             int finalQuantity = Math.Min(newItem.Quantity, availableQty);
 
+            // Check if item already in cart
             var existingItem = Items.FirstOrDefault(i => i.ProductId == newItem.ProductId);
             if (existingItem != null)
             {
@@ -32,6 +34,8 @@ namespace Assignment_3_SWE30003.Models
                 Items.Add(newItem);
             }
         }
+
+        // Updates an existing cart item's quantity and details, respecting available stock.
         public void UpdateItem(CartItem updatedItem, int availableQty)
         {
             if (availableQty == 0)
@@ -45,12 +49,16 @@ namespace Assignment_3_SWE30003.Models
                 throw new InvalidOperationException("Cart item not found.");
             }
 
+            // Update quantity within available stock limits
             int finalQuantity = Math.Min(updatedItem.Quantity, availableQty);
             item.Quantity = finalQuantity;
 
+            // Update product details
             item.UnitPrice = updatedItem.UnitPrice;
             item.ProductName = updatedItem.ProductName;
         }
+
+        // Removes a specific item from the cart by its ID.
         public void RemoveItem(int cartItemId)
         {
             var item = Items.FirstOrDefault(i => i.Id == cartItemId);
@@ -61,8 +69,8 @@ namespace Assignment_3_SWE30003.Models
 
             Items.Remove(item);
         }
-        // --------------------------------------------------------------------------------
-        // Calculates taxes, and total price
+
+        // Recalculates cart subtotal, tax, and total based on current items and tax rate.
         public void RecalculateTotals(decimal taxRate)
         {
             Subtotal = Items.Sum(i => i.GetSubtotal());
@@ -70,7 +78,7 @@ namespace Assignment_3_SWE30003.Models
             Total = Subtotal + Tax;
         }
 
-        // Create order for checkout
+        // Creates an order snapshot from the current cart state for checkout.
         public Order CreateOrderFromSnapshot(int customerId)
         {
             var order = Order.FromCart(this);
@@ -78,7 +86,7 @@ namespace Assignment_3_SWE30003.Models
             return order;
         }
 
-        // Clear cart items
+        // Clears all items from the cart and resets totals to zero.
         public void Clear()
         {
             var itemsToRemove = Items.ToList();

@@ -14,37 +14,32 @@ namespace Assignment_3_SWE30003.Controllers
             _inventory = inventory;
         }
 
-        // Add a new product to the inventory (requires admin authentication)
+        // Adds a product to inventory with specified quantity (admin only).
         [HttpPost("add-product")]
         public IActionResult AddProductToInventory(int productId, int quantity)
         {
-            // Authenticate admin user using BaseController
             var (admin, error) = ValidateAdminAsync().Result;
             if (error != null) return error;
 
-            // Add product to inventory
             var result = _inventory.AddProduct(productId, quantity);
             return Ok(result);
         }
 
-        // Update the stock quantity of a product in inventory (requires admin authentication)
+        // Updates the stock quantity of a product in inventory (admin only).
         [HttpPut("update-product")]
         public IActionResult UpdateProductToInventory(int productId, int quantity)
         {
-            // Authenticate admin user using BaseController
             var (admin, error) = ValidateAdminAsync().Result;
             if (error != null) return error;
 
-            // Update product quantity
             var result = _inventory.UpdateQuantity(productId, quantity);
             return Ok(result);
         }
 
-        // Retrieve all products and their quantities in inventory (requires admin authentication)
+        // Lists all products in inventory with their stock quantities.
         [HttpGet("list-products")]
         public IActionResult ListProducts()
         {
-            // TODO: Authorization
             var inventories = _inventory.GetInventoryProducts();
             return Ok(inventories);
         }

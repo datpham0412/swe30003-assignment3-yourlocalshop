@@ -8,6 +8,7 @@ namespace Assignment_3_SWE30003.Models
         Delivered
     }
 
+    // Represents a shipment for an order with tracking number, delivery address, status, and delivery date.
     public class Shipment : EmailNotifier
     {
         public int Id { get; set; }
@@ -20,13 +21,13 @@ namespace Assignment_3_SWE30003.Models
 
         public Order Order { get; set; } = default!;
 
-        // Update shipment details (status, delivery date)
+        // Updates shipment status and sends email notification when dispatched.
         public void UpdateStatus(ShipmentStatus newStatus, string customerEmail, DateTime? deliveryDate = null)
         {
             Status = newStatus;
             if (newStatus == ShipmentStatus.Delivered)
                 DeliveryDate = deliveryDate ?? DateTime.UtcNow;
-            
+
             // Notify observers only when dispatched
             if (newStatus == ShipmentStatus.Dispatched)
             {

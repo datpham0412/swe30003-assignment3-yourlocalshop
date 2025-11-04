@@ -1,5 +1,6 @@
 namespace Assignment_3_SWE30003.Models
 {
+    // Represents an individual item in a shopping cart with product details, quantity, and price information.
     public class CartItem
     {
         public int Id { get; set; }
@@ -8,7 +9,8 @@ namespace Assignment_3_SWE30003.Models
         public string ProductName { get; set; } = string.Empty;
         public decimal UnitPrice { get; set; }
         public int Quantity { get; set; }
-        // Calculates subtotal for the cart item
+
+        // Calculates the total price for this cart item (unit price × quantity).
         public decimal GetSubtotal() => UnitPrice * Quantity;
     }
 }

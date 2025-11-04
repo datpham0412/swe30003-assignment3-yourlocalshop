@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Assignment_3_SWE30003.Models
 {
-    // Represents the stock quantity of a specific product in the inventory
+    // Represents the stock quantity available for a specific product in the inventory system.
     public class InventoryProduct
     {
         [Key]

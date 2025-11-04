@@ -1,11 +1,11 @@
 namespace Assignment_3_SWE30003.Models;
 
-// EmailNotifier class that manages email observers and notifies them of events
+// Base class implementing the Observer pattern for email notifications, managing observers and triggering notifications.
 public class EmailNotifier
 {
     private readonly List<EmailSender> _observers = new List<EmailSender>();
 
-    // Attach an observer
+    // Registers an email sender to receive notifications.
     public void Attach(EmailSender observer)
     {
         if (!_observers.Contains(observer))
@@ -14,13 +14,13 @@ public class EmailNotifier
         }
     }
 
-    // Detach an observer
+    // Removes an email sender from receiving notifications.
     public void Detach(EmailSender observer)
     {
         _observers.Remove(observer);
     }
 
-    // Notify all observers about an event
+    // Notifies all registered observers about an event with the provided data.
     protected void NotifyObservers(string eventType, Dictionary<string, object> data)
     {
         foreach (var observer in _observers)

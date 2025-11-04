@@ -2,7 +2,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Assignment_3_SWE30003.Models
 {
-    // Type of periods for a report
     public enum ReportPeriod
     {
         Daily,
@@ -10,6 +9,7 @@ namespace Assignment_3_SWE30003.Models
         Monthly
     }
 
+    // Represents a sales report with total orders, revenue, and the time period covered.
     public class SalesReport
     {
         public int Id { get; private set; }
@@ -21,7 +21,7 @@ namespace Assignment_3_SWE30003.Models
         [NotMapped]
         public List<Order> Orders { get; private set; } = new();
 
-        // Generate the report with orders and calculate all the metrics
+        // Generates the sales report from a list of orders and calculates metrics.
         public void Generate(List<Order> orders, ReportPeriod period)
         {
             Orders = orders.ToList();
@@ -31,13 +31,13 @@ namespace Assignment_3_SWE30003.Models
             TotalRevenue = CalculateTotalRevenue();
         }
 
-        // Count how many orders are in this report
+        // Counts the total number of orders in this report.
         private int CalculateTotalOrders()
         {
             return Orders?.Count ?? 0;
         }
 
-        // Sum up the total revenue from all orders in this report
+        // Calculates the total revenue from all orders in this report.
         private decimal CalculateTotalRevenue()
         {
             return Orders?.Sum(o => o.Total) ?? 0;

@@ -1,5 +1,6 @@
 namespace Assignment_3_SWE30003.Models
 {
+    // Represents a single product line item within an order, with product details, quantity, and line total.
     public class OrderLine
     {
         public int Id { get; set; }

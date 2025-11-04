@@ -12,6 +12,7 @@ namespace Assignment_3_SWE30003.Controllers
         {
         }
 
+        // Retrieves invoice details for a specific order with line items and totals.
         [HttpGet("{orderId}")]
         public async Task<IActionResult> GetInvoiceForOrder(int orderId)
         {
@@ -23,6 +24,7 @@ namespace Assignment_3_SWE30003.Controllers
                     return UnauthorizedResponse();
                 }
 
+                // Load invoice with related payment and order data
                 var invoice = await _context.Invoices
                     .Include(i => i.Payment)
                     .ThenInclude(p => p.Order)
@@ -34,11 +36,13 @@ namespace Assignment_3_SWE30003.Controllers
                     return NotFound("Invoice not found for this order.");
                 }
 
+                // Verify customer owns the order or user is admin
                 if (user.Role == "Customer" && invoice.Payment.Order.CustomerId != user.Id)
                 {
                     return Unauthorized("You are not authorized to view this invoice.");
                 }
 
+                // Return complete invoice details
                 return Ok(new
                 {
                     invoiceId = invoice.Id,
@@ -66,6 +70,7 @@ namespace Assignment_3_SWE30003.Controllers
             }
         }
 
+        // Lists all invoices in the system (admin only).
         [HttpGet("list")]
         public async Task<IActionResult> GetAllInvoices()
         {
