@@ -1,30 +1,33 @@
-"use client"
+"use client";
 
-import { useDraggable, useDroppable } from "@dnd-kit/core"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Spinner } from "@/components/ui/spinner"
-import { Pencil, Trash2, GripVertical, CheckCircle2, Package } from "lucide-react"
-import { motion } from "framer-motion"
+import { useDraggable, useDroppable } from "@dnd-kit/core";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
+import { Pencil, Trash2, GripVertical, CheckCircle2, Package } from "lucide-react";
+import { motion } from "framer-motion";
 
+// Product data structure with optional inventory information.
 export interface Product {
-  id: number
-  name: string
-  price: number
-  category: string
-  quantity?: number // Optional quantity from inventory
-  inventoryId?: number // Optional inventory ID for updates
+  id: number;
+  name: string;
+  price: number;
+  category: string;
+  quantity?: number; // Optional quantity from inventory
+  inventoryId?: number; // Optional inventory ID for updates
 }
 
+// Props for the product list including actions and catalogue tracking.
 interface ProductListProps {
-  products: Product[]
-  loading: boolean
-  onEdit: (product: Product) => void
-  onDelete: (product: Product) => void
-  deletingProductId: number | null
-  catalogueProductIds: number[] // Track which products are in catalogue by ID
+  products: Product[];
+  loading: boolean;
+  onEdit: (product: Product) => void;
+  onDelete: (product: Product) => void;
+  deletingProductId: number | null;
+  catalogueProductIds: number[]; // Track which products are in catalogue by ID
 }
 
+// Draggable card displaying a single product with edit and delete actions.
 function DraggableProductCard({
   product,
   onEdit,
@@ -32,24 +35,26 @@ function DraggableProductCard({
   isDeleting,
   isInCatalogue,
 }: {
-  product: Product
-  onEdit: (product: Product) => void
-  onDelete: (product: Product) => void
-  isDeleting: boolean
-  isInCatalogue: boolean // Pass as prop instead of reading from product
+  product: Product;
+  onEdit: (product: Product) => void;
+  onDelete: (product: Product) => void;
+  isDeleting: boolean;
+  isInCatalogue: boolean; // Pass as prop instead of reading from product
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: `product-${product.id}`,
     data: product,
-  })
+  });
 
   const style = transform
     ? {
-        transform: `translate3d(${transform.x}px, ${transform.y}px, 0) ${isDragging ? "rotate(3deg) scale(1.05)" : ""}`,
+        transform: `translate3d(${transform.x}px, ${transform.y}px, 0) ${
+          isDragging ? "rotate(3deg) scale(1.05)" : ""
+        }`,
         opacity: isDragging ? 0.5 : 1,
         zIndex: isDragging ? 1000 : "auto",
       }
-    : undefined
+    : undefined;
 
   return (
     <motion.div
@@ -95,7 +100,9 @@ function DraggableProductCard({
 
               <div className="flex items-center gap-1 mb-3 text-sm text-gray-600">
                 <Package className="h-4 w-4" />
-                <span>Quantity: {product.quantity !== undefined ? product.quantity : "Not set"}</span>
+                <span>
+                  Quantity: {product.quantity !== undefined ? product.quantity : "Not set"}
+                </span>
               </div>
 
               <div className="flex items-center gap-2">
@@ -115,7 +122,11 @@ function DraggableProductCard({
                   className="flex-1 hover:bg-red-50 hover:text-red-600 hover:border-red-300"
                   disabled={isDeleting}
                 >
-                  {isDeleting ? <Spinner className="h-3 w-3 mr-1" /> : <Trash2 className="h-3 w-3 mr-1" />}
+                  {isDeleting ? (
+                    <Spinner className="h-3 w-3 mr-1" />
+                  ) : (
+                    <Trash2 className="h-3 w-3 mr-1" />
+                  )}
                   Delete
                 </Button>
               </div>
@@ -124,9 +135,10 @@ function DraggableProductCard({
         </CardContent>
       </Card>
     </motion.div>
-  )
+  );
 }
 
+// List of all products with drag-and-drop support for catalogue management.
 export default function ProductList({
   products,
   loading,
@@ -135,9 +147,10 @@ export default function ProductList({
   deletingProductId,
   catalogueProductIds,
 }: ProductListProps) {
+  // Makes this list a drop zone for removing products from catalogue.
   const { setNodeRef, isOver } = useDroppable({
     id: "product-list",
-  })
+  });
 
   if (loading) {
     return (
@@ -148,35 +161,43 @@ export default function ProductList({
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   if (products.length === 0) {
     return (
       <Card className="shadow-xl border-purple-100">
         <CardContent className="p-6">
-          <p className="text-center text-gray-500 py-12">No products yet. Add your first product!</p>
+          <p className="text-center text-gray-500 py-12">
+            No products yet. Add your first product!
+          </p>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   return (
     <Card
       ref={setNodeRef}
       className={`shadow-xl transition-all duration-300 ${
-        isOver ? "border-purple-500 border-2 bg-purple-50/50 ring-4 ring-purple-200" : "border-purple-100"
+        isOver
+          ? "border-purple-500 border-2 bg-purple-50/50 ring-4 ring-purple-200"
+          : "border-purple-100"
       }`}
     >
       <CardContent className="p-6">
-        <h3 className="text-lg font-semibold mb-4 text-gray-900">All Products ({products.length})</h3>
+        <h3 className="text-lg font-semibold mb-4 text-gray-900">
+          All Products ({products.length})
+        </h3>
         {isOver && (
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             className="mb-3 p-3 border-2 border-dashed border-purple-400 rounded-lg bg-purple-50 text-center"
           >
-            <p className="text-purple-700 font-semibold text-sm">Drop here to remove from catalogue</p>
+            <p className="text-purple-700 font-semibold text-sm">
+              Drop here to remove from catalogue
+            </p>
           </motion.div>
         )}
         <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2">
@@ -193,5 +214,5 @@ export default function ProductList({
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

@@ -1,140 +1,149 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { Card, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Spinner } from "@/components/ui/spinner"
-import { Search, ShoppingBag, Filter, ShoppingCart, Plus, Minus } from "lucide-react"
-import { motion } from "framer-motion"
-import { CustomerNav } from "@/components/customer/CustomerNav"
-import { toast } from "sonner"
+import { useEffect, useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
+import { Search, ShoppingBag, Filter, ShoppingCart, Plus, Minus } from "lucide-react";
+import { motion } from "framer-motion";
+import { CustomerNav } from "@/components/customer/CustomerNav";
+import { toast } from "sonner";
 
+// Product data structure displayed in the public catalogue.
 interface CatalogueProduct {
-  id: number
-  name: string
-  price: number
-  category: string
+  id: number;
+  name: string;
+  price: number;
+  category: string;
 }
 
+// Customer catalogue page displaying products with search, category filtering, and add-to-cart functionality.
 export default function CataloguePage() {
-  const [products, setProducts] = useState<CatalogueProduct[]>([])
-  const [filteredProducts, setFilteredProducts] = useState<CatalogueProduct[]>([])
-  const [loading, setLoading] = useState(true)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState<string>("All")
-  const [categories, setCategories] = useState<string[]>([])
-  const [addingToCart, setAddingToCart] = useState<Set<number>>(new Set())
-  const [quantities, setQuantities] = useState<Record<number, number>>({})
+  const [products, setProducts] = useState<CatalogueProduct[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<CatalogueProduct[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("All");
+  const [categories, setCategories] = useState<string[]>([]);
+  const [addingToCart, setAddingToCart] = useState<Set<number>>(new Set());
+  const [quantities, setQuantities] = useState<Record<number, number>>({});
 
+  // Loads catalogue products when the page mounts.
   useEffect(() => {
-    fetchCatalogue()
-  }, [])
+    fetchCatalogue();
+  }, []);
 
+  // Filters products whenever search query, category, or product list changes.
   useEffect(() => {
-    filterProducts()
-  }, [searchQuery, selectedCategory, products])
+    filterProducts();
+  }, [searchQuery, selectedCategory, products]);
 
+  // Fetches all products available in the public catalogue from the API.
   const fetchCatalogue = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const response = await fetch("http://localhost:5074/api/Catalogue/list-products")
+      const response = await fetch("http://localhost:5074/api/Catalogue/list-products");
 
       if (response.ok) {
-        const data: CatalogueProduct[] = await response.json()
-        setProducts(data)
-        setFilteredProducts(data)
+        const data: CatalogueProduct[] = await response.json();
+        setProducts(data);
+        setFilteredProducts(data);
 
-        const uniqueCategories = Array.from(new Set(data.map((p) => p.category)))
-        setCategories(["All", ...uniqueCategories])
+        const uniqueCategories = Array.from(new Set(data.map((p) => p.category)));
+        setCategories(["All", ...uniqueCategories]);
       }
     } catch (error) {
-      console.error("Failed to fetch catalogue:", error)
+      console.error("Failed to fetch catalogue:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
+  // Filters products based on search query and selected category.
   const filterProducts = () => {
-    let filtered = products
+    let filtered = products;
 
     if (searchQuery) {
       filtered = filtered.filter(
         (product) =>
           product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          product.category.toLowerCase().includes(searchQuery.toLowerCase()),
-      )
+          product.category.toLowerCase().includes(searchQuery.toLowerCase())
+      );
     }
 
     if (selectedCategory !== "All") {
-      filtered = filtered.filter((product) => product.category === selectedCategory)
+      filtered = filtered.filter((product) => product.category === selectedCategory);
     }
 
-    setFilteredProducts(filtered)
-  }
+    setFilteredProducts(filtered);
+  };
 
+  // Adds a product to the customer's shopping cart with the specified quantity.
   const addToCart = async (productId: number) => {
-    const email = localStorage.getItem("email")
-    const password = localStorage.getItem("password")
+    const email = localStorage.getItem("email");
+    const password = localStorage.getItem("password");
 
     if (!email || !password) {
       toast.error("Authentication required", {
         description: "Please log in to add items to cart",
-      })
-      return
+      });
+      return;
     }
 
-    const quantity = quantities[productId] || 1
-    setAddingToCart((prev) => new Set(prev).add(productId))
+    const quantity = quantities[productId] || 1;
+    setAddingToCart((prev) => new Set(prev).add(productId));
 
     try {
       const response = await fetch(
-        `http://localhost:5074/api/ShoppingCart/add?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`,
+        `http://localhost:5074/api/ShoppingCart/add?email=${encodeURIComponent(
+          email
+        )}&password=${encodeURIComponent(password)}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ productId, quantity }),
-        },
-      )
+        }
+      );
 
       if (response.ok) {
         toast.success("Added to cart", {
           description: `${quantity} item(s) added successfully`,
-        })
-        setQuantities((prev) => ({ ...prev, [productId]: 1 }))
+        });
+        setQuantities((prev) => ({ ...prev, [productId]: 1 }));
       } else {
-        const errorText = await response.text()
+        const errorText = await response.text();
         toast.error("Failed to add to cart", {
           description: errorText || "Please try again",
-        })
+        });
       }
     } catch (error) {
       toast.error("Network error", {
         description: "Please check your connection",
-      })
+      });
     } finally {
       setAddingToCart((prev) => {
-        const newSet = new Set(prev)
-        newSet.delete(productId)
-        return newSet
-      })
+        const newSet = new Set(prev);
+        newSet.delete(productId);
+        return newSet;
+      });
     }
-  }
+  };
 
   const updateQuantity = (productId: number, delta: number) => {
     setQuantities((prev) => {
-      const current = prev[productId] || 1
-      const newQuantity = Math.max(1, current + delta)
-      return { ...prev, [productId]: newQuantity }
-    })
-  }
+      const current = prev[productId] || 1;
+      const newQuantity = Math.max(1, current + delta);
+      return { ...prev, [productId]: newQuantity };
+    });
+  };
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 via-white to-emerald-50">
         <Spinner className="h-12 w-12 text-purple-600" />
       </div>
-    )
+    );
   }
 
   return (
@@ -229,7 +238,9 @@ export default function CataloguePage() {
                 <Card className="shadow-lg hover:shadow-xl transition-all duration-300 border-purple-100 h-full">
                   <CardContent className="p-6 flex flex-col h-full">
                     <div className="flex-1">
-                      <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2">{product.name}</h3>
+                      <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2">
+                        {product.name}
+                      </h3>
                       <span className="inline-block px-3 py-1 rounded-full text-xs bg-purple-100 text-purple-700 font-medium mb-3">
                         {product.category}
                       </span>
@@ -253,7 +264,9 @@ export default function CataloguePage() {
                           >
                             <Minus className="h-3 w-3" />
                           </Button>
-                          <span className="w-8 text-center text-sm font-medium">{quantities[product.id] || 1}</span>
+                          <span className="w-8 text-center text-sm font-medium">
+                            {quantities[product.id] || 1}
+                          </span>
                           <Button
                             size="sm"
                             variant="ghost"
@@ -294,5 +307,5 @@ export default function CataloguePage() {
         <p>© 2025 Your Local Shop. All rights reserved.</p>
       </footer>
     </div>
-  )
+  );
 }

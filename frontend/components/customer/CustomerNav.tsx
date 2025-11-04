@@ -1,47 +1,55 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { useRouter, usePathname } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { ShoppingBag, ShoppingCart, Package, User, LogOut } from "lucide-react"
-import Link from "next/link"
+import { useEffect, useState } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { ShoppingBag, ShoppingCart, Package, User, LogOut } from "lucide-react";
+import Link from "next/link";
 
+// Customer navigation bar with cart count badge and links to catalogue, cart, orders, and account.
 export function CustomerNav() {
-  const router = useRouter()
-  const pathname = usePathname()
-  const [cartItemCount, setCartItemCount] = useState(0)
+  const router = useRouter();
+  const pathname = usePathname();
+  const [cartItemCount, setCartItemCount] = useState(0);
 
+  // Refresh cart count whenever the page route changes.
   useEffect(() => {
-    fetchCartCount()
-  }, [pathname])
+    fetchCartCount();
+  }, [pathname]);
 
+  // Fetches the total number of items in the customer's shopping cart from the API.
   const fetchCartCount = async () => {
-    const email = localStorage.getItem("email")
-    const password = localStorage.getItem("password")
+    const email = localStorage.getItem("email");
+    const password = localStorage.getItem("password");
 
-    if (!email || !password) return
+    if (!email || !password) return;
 
     try {
       const response = await fetch(
-        `http://localhost:5074/api/ShoppingCart/list?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`,
-      )
+        `http://localhost:5074/api/ShoppingCart/list?email=${encodeURIComponent(
+          email
+        )}&password=${encodeURIComponent(password)}`
+      );
 
       if (response.ok) {
-        const data = await response.json()
-        const totalItems = data.items?.reduce((sum: number, item: any) => sum + item.quantity, 0) || 0
-        setCartItemCount(totalItems)
+        const data = await response.json();
+        const totalItems =
+          data.items?.reduce((sum: number, item: any) => sum + item.quantity, 0) || 0;
+        setCartItemCount(totalItems);
       }
     } catch (error) {
-      console.error("Failed to fetch cart count:", error)
+      console.error("Failed to fetch cart count:", error);
     }
-  }
+  };
 
+  // Clears user credentials from local storage and redirects to authentication page.
   const handleLogout = () => {
-    localStorage.clear()
-    router.push("/auth")
-  }
+    localStorage.clear();
+    router.push("/auth");
+  };
 
-  const isActive = (path: string) => pathname === path
+  // Checks if the given path matches the current route for active navigation styling.
+  const isActive = (path: string) => pathname === path;
 
   return (
     <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50 shadow-sm">
@@ -60,7 +68,9 @@ export function CustomerNav() {
                 variant={isActive("/catalogue") ? "default" : "ghost"}
                 size="sm"
                 className={
-                  isActive("/catalogue") ? "bg-gradient-to-r from-purple-600 to-emerald-500" : "hover:bg-purple-50"
+                  isActive("/catalogue")
+                    ? "bg-gradient-to-r from-purple-600 to-emerald-500"
+                    : "hover:bg-purple-50"
                 }
               >
                 <ShoppingBag className="h-4 w-4 mr-2" />
@@ -93,7 +103,9 @@ export function CustomerNav() {
                 variant={isActive("/orders") ? "default" : "ghost"}
                 size="sm"
                 className={
-                  isActive("/orders") ? "bg-gradient-to-r from-purple-600 to-emerald-500" : "hover:bg-purple-50"
+                  isActive("/orders")
+                    ? "bg-gradient-to-r from-purple-600 to-emerald-500"
+                    : "hover:bg-purple-50"
                 }
               >
                 <Package className="h-4 w-4 mr-2" />
@@ -105,7 +117,11 @@ export function CustomerNav() {
               <Button
                 variant={isActive("/account") ? "default" : "ghost"}
                 size="sm"
-                className={isActive("/account") ? "bg-gradient-to-r from-purple-600 to-emerald-500" : "hover:bg-purple-50"}
+                className={
+                  isActive("/account")
+                    ? "bg-gradient-to-r from-purple-600 to-emerald-500"
+                    : "hover:bg-purple-50"
+                }
               >
                 <User className="h-4 w-4 mr-2" />
                 Account
@@ -125,5 +141,5 @@ export function CustomerNav() {
         </div>
       </div>
     </header>
-  )
+  );
 }

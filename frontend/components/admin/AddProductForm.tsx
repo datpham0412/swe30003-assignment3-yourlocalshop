@@ -1,53 +1,67 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Spinner } from "@/components/ui/spinner"
-import { Plus } from "lucide-react"
+import type React from "react";
+import { useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Spinner } from "@/components/ui/spinner";
+import { Plus } from "lucide-react";
 
+// Props for the product creation form including admin credentials and callbacks.
 interface AddProductFormProps {
-  email: string
-  password: string
-  onProductAdded: () => void
-  onShowToast: (type: "success" | "error", text: string) => void
+  email: string;
+  password: string;
+  onProductAdded: () => void;
+  onShowToast: (type: "success" | "error", text: string) => void;
 }
 
-export default function AddProductForm({ email, password, onProductAdded, onShowToast }: AddProductFormProps) {
+// Form component for admins to add new products with name, category, and price.
+export default function AddProductForm({
+  email,
+  password,
+  onProductAdded,
+  onShowToast,
+}: AddProductFormProps) {
   const [formData, setFormData] = useState({
     name: "",
     price: "",
     category: "",
-  })
-  const [loading, setLoading] = useState(false)
+  });
+  const [loading, setLoading] = useState(false);
 
+  // Submits new product data to the API and notifies parent component on success.
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
+    e.preventDefault();
+    setLoading(true);
 
     try {
       const response = await fetch(
-        `http://localhost:5074/api/Product/add?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}&name=${encodeURIComponent(formData.name)}&price=${encodeURIComponent(formData.price)}&category=${encodeURIComponent(formData.category)}`,
-        { method: "POST" },
-      )
+        `http://localhost:5074/api/Product/add?email=${encodeURIComponent(
+          email
+        )}&password=${encodeURIComponent(password)}&name=${encodeURIComponent(
+          formData.name
+        )}&price=${encodeURIComponent(formData.price)}&category=${encodeURIComponent(
+          formData.category
+        )}`,
+        { method: "POST" }
+      );
 
       if (response.ok) {
-        onShowToast("success", "Product added successfully!")
-        setFormData({ name: "", price: "", category: "" })
-        onProductAdded()
+        onShowToast("success", "Product added successfully!");
+        setFormData({ name: "", price: "", category: "" });
+        onProductAdded();
       } else {
-        const errorText = await response.text()
-        onShowToast("error", errorText || "Failed to add product.")
+        const errorText = await response.text();
+        onShowToast("error", errorText || "Failed to add product.");
       }
     } catch (error) {
-      onShowToast("error", "Network error. Please check your connection.")
+      onShowToast("error", "Network error. Please check your connection.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <Card className="shadow-xl border-purple-100 h-fit">
@@ -120,5 +134,5 @@ export default function AddProductForm({ email, password, onProductAdded, onShow
         </form>
       </CardContent>
     </Card>
-  )
+  );
 }
