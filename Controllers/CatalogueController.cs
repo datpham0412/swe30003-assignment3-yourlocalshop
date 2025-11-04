@@ -9,41 +9,35 @@ namespace Assignment_3_SWE30003.Controllers
     {
         private readonly Catalogue _catalogue;
 
-        // Initialize controller with database context and catalogue service
         public CatalogueController(AppDbContext context, Catalogue catalogue) : base(context)
         {
             _catalogue = catalogue;
         }
 
-        // Retrieve all products currently listed in the catalogue
+        // Retrieves all products currently available in the public catalogue.
         [HttpGet("list-products")]
         public IActionResult ListAllProductsInCatalogue()
         {
-            // TODO: Authorization
             return Ok(_catalogue.GetProducts());
         }
 
-        // Add a product to the catalogue (requires admin authentication)
+        // Adds a product to the catalogue (admin only).
         [HttpPost("add-product")]
         public IActionResult AddProductToCatalogue(int productId)
         {
-            // Authenticate admin user using BaseController
             var (admin, error) = ValidateAdminAsync().Result;
             if (error != null) return error;
 
-            // Add product to catalogue
             return Ok(_catalogue.AddProduct(productId));
         }
 
-        // Remove a product from the catalogue (requires admin authentication)
+        // Removes a product from the catalogue (admin only).
         [HttpDelete("remove-product")]
         public IActionResult RemoveProductFromCatalogue(int productId)
         {
-            // Authenticate admin user using BaseController
             var (admin, error) = ValidateAdminAsync().Result;
             if (error != null) return error;
 
-            // Remove product from catalogue
             return Ok(_catalogue.RemoveProduct(productId));
         }
     }

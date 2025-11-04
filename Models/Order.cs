@@ -12,6 +12,7 @@ namespace Assignment_3_SWE30003.Models
         Cancelled
     }
 
+    // Represents a customer order with order items, status, pricing details, and shipping information.
     public class Order
     {
         public int Id { get; set; }
@@ -32,7 +33,7 @@ namespace Assignment_3_SWE30003.Models
         public string? ContactPhone { get; set; }
         public string? Note { get; set; }
 
-        // Knows order details (order status, items from cart, total price, and customer details) (3.3.5)
+        // Creates an order from a shopping cart snapshot, copying all items and totals.
         public static Order FromCart(ShoppingCart cart)
         {
             var order = new Order
@@ -45,6 +46,7 @@ namespace Assignment_3_SWE30003.Models
                 Status = OrderStatus.PendingPayment
             };
 
+            // Copy cart items to order lines
             foreach (var item in cart.Items)
             {
                 var orderLine = new OrderLine
@@ -61,7 +63,7 @@ namespace Assignment_3_SWE30003.Models
             return order;
         }
 
-        // Updates order status (3.3.5)
+        // Transitions order status from PendingPayment to Paid.
         public void SetStatusPaid()
         {
             if (Status != OrderStatus.PendingPayment)
@@ -70,7 +72,8 @@ namespace Assignment_3_SWE30003.Models
             }
             Status = OrderStatus.Paid;
         }
-        // Updates order status (3.3.5)
+
+        // Transitions order status from Paid to Processing.
         public void AdvanceToProcessing()
         {
             if (Status != OrderStatus.Paid)
@@ -80,7 +83,7 @@ namespace Assignment_3_SWE30003.Models
             Status = OrderStatus.Processing;
         }
 
-        // Update shipment status (3.3.4)
+        // Transitions order status from Processing to Packed.
         public void MarkPacked()
         {
             if (Status != OrderStatus.Processing)
@@ -90,7 +93,7 @@ namespace Assignment_3_SWE30003.Models
             Status = OrderStatus.Packed;
         }
 
-        // Update shipment status (3.3.4)
+        // Transitions order status from Packed to Shipped.
         public void MarkShipped()
         {
             if (Status != OrderStatus.Packed)
@@ -99,7 +102,8 @@ namespace Assignment_3_SWE30003.Models
             }
             Status = OrderStatus.Shipped;
         }
-        // Update shipment status (3.3.4)
+
+        // Transitions order status from Shipped to Delivered.
         public void MarkDelivered()
         {
             if (Status != OrderStatus.Shipped)
@@ -108,7 +112,8 @@ namespace Assignment_3_SWE30003.Models
             }
             Status = OrderStatus.Delivered;
         }
-        // Update shipment status (3.3.4)
+
+        // Marks order as Failed if not already delivered.
         public void MarkFailed()
         {
             if (Status == OrderStatus.Delivered)
@@ -118,7 +123,7 @@ namespace Assignment_3_SWE30003.Models
             Status = OrderStatus.Failed;
         }
 
-        // Update shipment status (3.3.4)
+        // Cancels order if not yet packed, shipped, or delivered.
         public void MarkCancelled()
         {
             if (Status == OrderStatus.Delivered || Status == OrderStatus.Shipped || Status == OrderStatus.Packed)
@@ -127,7 +132,8 @@ namespace Assignment_3_SWE30003.Models
             }
             Status = OrderStatus.Cancelled;
         }
-        // Triggers stock update after order completion (3.3.5)
+
+        // Deducts inventory stock for all order items using the provided deduction callback.
         public void ApplyStockDeduction(Action<int, int> deductByProductId)
         {
             if (Status != OrderStatus.Paid)

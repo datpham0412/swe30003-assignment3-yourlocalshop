@@ -1,23 +1,25 @@
-"use client"
+"use client";
 
-import { useDroppable, useDraggable } from "@dnd-kit/core"
-import { Card, CardContent } from "@/components/ui/card"
-import { Spinner } from "@/components/ui/spinner"
-import { ShoppingBag, CheckCircle2, GripVertical } from "lucide-react"
-import { motion } from "framer-motion"
-import type { Product } from "./ProductList"
+import { useDroppable, useDraggable } from "@dnd-kit/core";
+import { Card, CardContent } from "@/components/ui/card";
+import { Spinner } from "@/components/ui/spinner";
+import { ShoppingBag, CheckCircle2, GripVertical } from "lucide-react";
+import { motion } from "framer-motion";
+import type { Product } from "./ProductList";
 
+// Props for the catalogue management area showing products visible to customers.
 interface CatalogueSpaceProps {
-  catalogueProducts: Product[]
-  isOver?: boolean
-  loading?: boolean
+  catalogueProducts: Product[];
+  isOver?: boolean;
+  loading?: boolean;
 }
 
+// Draggable card for a product currently in the catalogue.
 function DraggableCatalogueProduct({ product, index }: { product: Product; index: number }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `catalogue-${product.id}`,
     data: product,
-  })
+  });
 
   return (
     <motion.div
@@ -43,7 +45,9 @@ function DraggableCatalogueProduct({ product, index }: { product: Product; index
                   <span className="px-2 py-0.5 rounded-full text-xs bg-purple-100 text-purple-700">
                     {product.category}
                   </span>
-                  <span className="text-sm font-bold text-emerald-600">${product.price.toFixed(2)}</span>
+                  <span className="text-sm font-bold text-emerald-600">
+                    ${product.price.toFixed(2)}
+                  </span>
                 </div>
               </div>
             </div>
@@ -51,13 +55,15 @@ function DraggableCatalogueProduct({ product, index }: { product: Product; index
         </CardContent>
       </Card>
     </motion.div>
-  )
+  );
 }
 
+// Drop zone for adding products to the customer-facing catalogue via drag-and-drop.
 export default function CatalogueSpace({ catalogueProducts, loading }: CatalogueSpaceProps) {
+  // Makes this component a drop zone for products being added to catalogue.
   const { setNodeRef, isOver } = useDroppable({
     id: "catalogue-space",
-  })
+  });
 
   return (
     <Card
@@ -71,7 +77,9 @@ export default function CatalogueSpace({ catalogueProducts, loading }: Catalogue
       <CardContent className="p-6">
         <div className="flex items-center gap-2 mb-4">
           <ShoppingBag className="h-5 w-5 text-emerald-600" />
-          <h3 className="text-lg font-semibold text-gray-900">Catalogue Space ({catalogueProducts.length} items)</h3>
+          <h3 className="text-lg font-semibold text-gray-900">
+            Catalogue Space ({catalogueProducts.length} items)
+          </h3>
         </div>
 
         {loading ? (
@@ -97,8 +105,12 @@ export default function CatalogueSpace({ catalogueProducts, loading }: Catalogue
               <div className="flex items-center justify-center py-16 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
                 <div className="text-center">
                   <ShoppingBag className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-                  <p className="text-gray-500 font-medium">Drag products here to add to catalogue</p>
-                  <p className="text-sm text-gray-400 mt-1">Products will be visible to customers</p>
+                  <p className="text-gray-500 font-medium">
+                    Drag products here to add to catalogue
+                  </p>
+                  <p className="text-sm text-gray-400 mt-1">
+                    Products will be visible to customers
+                  </p>
                 </div>
               </div>
             )}
@@ -115,11 +127,11 @@ export default function CatalogueSpace({ catalogueProducts, loading }: Catalogue
 
         <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
           <p className="text-xs text-blue-700">
-            <strong>Tip:</strong> Drag products from the left into this space to make them visible in the customer
-            catalogue. Drag them out to remove them.
+            <strong>Tip:</strong> Drag products from the left into this space to make them visible
+            in the customer catalogue. Drag them out to remove them.
           </p>
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

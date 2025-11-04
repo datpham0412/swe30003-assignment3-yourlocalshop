@@ -5,10 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Assignment_3_SWE30003.Controllers
 {
-    /// <summary>
-    /// Provides shared reusable logic for all controllers, such as endpoint authorization, 
-    /// role checking and common utility methods.
-    /// </summary>
+    // Provides shared reusable logic for all controllers, such as endpoint authorization, role checking and common utility methods.
     [ApiController]
     public abstract class BaseController : ControllerBase
     {
@@ -21,10 +18,7 @@ namespace Assignment_3_SWE30003.Controllers
 
         #region Authentication Methods
 
-        /// <summary>
-        /// Authenticates a user by email and password from query parameters.
-        /// Returns the authenticated account or null if authentication fails.
-        /// </summary>
+        // Authenticates a user by email and password from query parameters, returning the account or null if authentication fails.
         protected async Task<Account?> AuthenticateUserAsync()
         {
             var email = HttpContext.Request.Query["email"].ToString();
@@ -41,14 +35,11 @@ namespace Assignment_3_SWE30003.Controllers
                 .FirstOrDefaultAsync(a => a.Email.ToLower() == normalizedEmail && a.Password == password);
         }
 
-        /// <summary>
-        /// Authenticates a user and checks if they have the specified role.
-        /// Returns the authenticated account or null if authentication or role check fails.
-        /// </summary>
+        // Authenticates a user and checks if they have the specified role, returning the account or null.
         protected async Task<Account?> AuthenticateUserWithRoleAsync(string requiredRole)
         {
             var account = await AuthenticateUserAsync();
-            
+
             if (account == null || account.Role != requiredRole)
             {
                 return null;
@@ -57,14 +48,11 @@ namespace Assignment_3_SWE30003.Controllers
             return account;
         }
 
-        /// <summary>
-        /// Authenticates a user and checks if they have any of the specified roles.
-        /// Returns the authenticated account or null if authentication or role check fails.
-        /// </summary>
+        // Authenticates a user and checks if they have any of the specified roles, returning the account or null.
         protected async Task<Account?> AuthenticateUserWithRolesAsync(params string[] allowedRoles)
         {
             var account = await AuthenticateUserAsync();
-            
+
             if (account == null || !allowedRoles.Contains(account.Role))
             {
                 return null;
@@ -77,17 +65,13 @@ namespace Assignment_3_SWE30003.Controllers
 
         #region Authorization Response Helpers
 
-        /// <summary>
-        /// Returns a standardized Unauthorized response.
-        /// </summary>
+        // Returns a standardized Unauthorized response with the provided message.
         protected IActionResult UnauthorizedResponse(string message = "Invalid credentials.")
         {
             return Unauthorized(new { message });
         }
 
-        /// <summary>
-        /// Returns a standardized Forbidden response for insufficient permissions.
-        /// </summary>
+        // Returns a standardized Forbidden response for insufficient permissions.
         protected IActionResult ForbiddenResponse(string message = "You do not have permission to perform this action.")
         {
             return StatusCode(403, new { message });
@@ -97,10 +81,7 @@ namespace Assignment_3_SWE30003.Controllers
 
         #region Role Checking Methods
 
-        /// <summary>
-        /// Checks if the authenticated user is a Customer.
-        /// Returns the account if true, otherwise returns an Unauthorized action result.
-        /// </summary>
+        // Checks if the authenticated user is a Customer, returning the account if true or an Unauthorized error.
         protected async Task<(Account? account, IActionResult? error)> ValidateCustomerAsync()
         {
             var account = await AuthenticateUserWithRoleAsync("Customer");
@@ -111,10 +92,7 @@ namespace Assignment_3_SWE30003.Controllers
             return (account, null);
         }
 
-        /// <summary>
-        /// Checks if the authenticated user is an Admin.
-        /// Returns the account if true, otherwise returns an Unauthorized action result.
-        /// </summary>
+        // Checks if the authenticated user is an Admin, returning the account if true or an Unauthorized error.
         protected async Task<(Account? account, IActionResult? error)> ValidateAdminAsync()
         {
             var account = await AuthenticateUserWithRoleAsync("Admin");
@@ -125,10 +103,7 @@ namespace Assignment_3_SWE30003.Controllers
             return (account, null);
         }
 
-        /// <summary>
-        /// Checks if the authenticated user is a Staff member.
-        /// Returns the account if true, otherwise returns an Unauthorized action result.
-        /// </summary>
+        // Checks if the authenticated user is a Staff member, returning the account if true or an Unauthorized error.
         protected async Task<(Account? account, IActionResult? error)> ValidateStaffAsync()
         {
             var account = await AuthenticateUserWithRoleAsync("Staff");
@@ -139,10 +114,7 @@ namespace Assignment_3_SWE30003.Controllers
             return (account, null);
         }
 
-        /// <summary>
-        /// Checks if the authenticated user is either Admin or Staff.
-        /// Returns the account if true, otherwise returns an Unauthorized action result.
-        /// </summary>
+        // Checks if the authenticated user is either Admin or Staff, returning the account if true or an Unauthorized error.
         protected async Task<(Account? account, IActionResult? error)> ValidateAdminOrStaffAsync()
         {
             var account = await AuthenticateUserWithRolesAsync("Admin", "Staff");
@@ -157,33 +129,25 @@ namespace Assignment_3_SWE30003.Controllers
 
         #region Common Utility Methods
 
-        /// <summary>
-        /// Checks if the current user is the owner of the specified account or has Admin privileges.
-        /// </summary>
+        // Checks if the current user is the owner of the specified account or has Admin privileges.
         protected bool IsOwnerOrAdmin(Account currentUser, int targetAccountId)
         {
             return currentUser.Id == targetAccountId || currentUser.Role == "Admin";
         }
 
-        /// <summary>
-        /// Gets the email from query parameters.
-        /// </summary>
+        // Gets the email from query parameters.
         protected string? GetEmailFromQuery()
         {
             return HttpContext.Request.Query["email"].ToString();
         }
 
-        /// <summary>
-        /// Gets the password from query parameters.
-        /// </summary>
+        // Gets the password from query parameters.
         protected string? GetPasswordFromQuery()
         {
             return HttpContext.Request.Query["password"].ToString();
         }
 
-        /// <summary>
-        /// Returns a standardized success response with a message and optional data.
-        /// </summary>
+        // Returns a standardized success response with a message and optional data.
         protected IActionResult SuccessResponse(string message, object? data = null)
         {
             if (data == null)
@@ -193,9 +157,7 @@ namespace Assignment_3_SWE30003.Controllers
             return Ok(new { message, data });
         }
 
-        /// <summary>
-        /// Returns a standardized error response with a message.
-        /// </summary>
+        // Returns a standardized error response with a message and status code.
         protected IActionResult ErrorResponse(string message, int statusCode = 400)
         {
             return StatusCode(statusCode, new { message });

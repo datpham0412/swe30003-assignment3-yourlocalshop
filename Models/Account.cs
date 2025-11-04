@@ -3,9 +3,9 @@ using System.Linq;
 
 namespace Assignment_3_SWE30003.Models
 {
+    // Represents a user account with credentials, role, personal information (name, email, phone), and account status.
     public class Account
     {
-        // Full name of account holder
         public string Name { get; set; } = string.Empty;
         public int Id { get; set; }
         public string Email { get; set; } = string.Empty;
@@ -14,19 +14,19 @@ namespace Assignment_3_SWE30003.Models
         public string Status { get; set; } = "Active";
         public string Role { get; set; } = "Customer";
 
+        // Updates the account's email and password credentials.
         public void ManageAccountInfo(string email, string password)
         {
             Email = email;
             Password = password;
         }
 
-        // Update this account. Validates email uniqueness and phone normalization.
-        // Returns an error message string on failure, or a success message on success.
+        // Updates account details with new name, email, password, or phone number.
         public string UpdateAccount(AppDbContext context, string? newName, string? newEmail, string? newPassword, string? newPhone)
         {
             if (context == null) return "Server error: missing context.";
 
-            // If changing email, ensure uniqueness across other accounts
+            // Validate email uniqueness if changing email
             if (!string.IsNullOrWhiteSpace(newEmail))
             {
                 var normalizedNew = newEmail.Trim().ToLowerInvariant();
@@ -36,12 +36,15 @@ namespace Assignment_3_SWE30003.Models
                 this.Email = normalizedNew;
             }
 
+            // Update name if provided
             if (!string.IsNullOrWhiteSpace(newName))
                 this.Name = newName.Trim();
 
+            // Update password if provided
             if (!string.IsNullOrWhiteSpace(newPassword))
                 this.Password = newPassword;
 
+            // Validate and normalize phone number if provided
             if (!string.IsNullOrWhiteSpace(newPhone))
             {
                 var normalizedPhone = NormalizeAustralianPhone(newPhone);
@@ -49,30 +52,35 @@ namespace Assignment_3_SWE30003.Models
                 this.Phone = normalizedPhone;
             }
 
+            // Save changes to database
             context.Accounts.Update(this);
             context.SaveChanges();
 
             return "Account updated successfully!";
         }
 
-        // Duplicate of previous helper but placed here so Account can validate phone input.
+        // Normalizes and validates Australian phone numbers to international format (+61XXXXXXXXX).
         private string? NormalizeAustralianPhone(string input)
         {
             if (string.IsNullOrWhiteSpace(input)) return null;
 
+            // Extract only digit characters from input
             var digits = new string(input.Where(char.IsDigit).ToArray());
 
+            // Handle country code format (61XXXXXXXXX)
             if (digits.StartsWith("61"))
             {
                 return "+" + digits;
             }
 
+            // Handle local format starting with 0 (0XXXXXXXXX)
             if (digits.StartsWith("0"))
             {
                 var rest = digits.Substring(1);
                 return "+61" + rest;
             }
 
+            // Handle raw number without prefix (assume Australian)
             if (digits.Length >= 8 && digits.Length <= 10)
                 return "+61" + digits;
 

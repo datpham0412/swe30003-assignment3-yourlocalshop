@@ -7,6 +7,7 @@ namespace Assignment_3_SWE30003.Models
         Failed
     }
 
+    // Represents a payment transaction for an order with payment method, amount, status, and date information.
     public class Payment : EmailNotifier
     {
         public int Id { get; set; }
@@ -18,7 +19,7 @@ namespace Assignment_3_SWE30003.Models
         public Order Order { get; set; } = default!;
         public Invoice? Invoice { get; set; }
 
-        // Constructor to create Payment with Order details
+        // Creates a payment record linked to a pending order with the order's total amount.
         public Payment(Order order)
         {
             if (order == null)
@@ -37,20 +38,21 @@ namespace Assignment_3_SWE30003.Models
             Method = "CreditCard";
         }
 
-        // Parameterless constructor for EF Core
         public Payment() { }
 
-        // Process payment
+        // Processes payment, updates order status to Paid, deducts inventory stock, and sends confirmation email.
         public void ProcessPayment(Action<int, int> deductStock, string customerEmail)
         {
             Status = PaymentStatus.Success;
             PaymentDate = DateTime.UtcNow;
 
+            // Mark order as paid
             Order.SetStatusPaid();
 
+            // Deduct stock from inventory
             Order.ApplyStockDeduction(deductStock);
-            
-            // Notify observers about payment completion
+
+            // Notify observers about successful payment
             NotifyObservers("PaymentCompleted", new Dictionary<string, object>
             {
                 { "Email", customerEmail },
@@ -59,7 +61,7 @@ namespace Assignment_3_SWE30003.Models
             });
         }
 
-        // Generate invoice after payment is saved (needs PaymentId)
+        // Creates and generates an invoice for this payment, then sends it via email.
         public void GenerateInvoice(string customerEmail)
         {
             Invoice = new Invoice(this);

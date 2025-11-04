@@ -2,17 +2,17 @@ using Assignment_3_SWE30003.Data;
 
 namespace Assignment_3_SWE30003.Models
 {
+    // Manages which products are visible in the public catalogue for customers to browse.
     public class Catalogue
     {
         private readonly AppDbContext _context;
 
-        // Initialize catalogue service with database context
         public Catalogue(AppDbContext context)
         {
             _context = context;
         }
 
-        // Retrieve all products that are currently listed in the catalogue
+        // Retrieves all products currently marked as available in the catalogue.
         public List<Product> GetProducts()
         {
             return _context.Products
@@ -27,37 +27,31 @@ namespace Assignment_3_SWE30003.Models
                 .ToList();
         }
 
-        // Mark a product as available in the catalogue
+        // Adds a product to the catalogue, making it visible to customers.
         public string AddProduct(int productId)
         {
-            // Find product in database
             var product = _context.Products.FirstOrDefault(p => p.Id == productId);
             if (product == null)
                 return "Product not found.";
 
-            // Check if already in catalogue
             if (product.IsInCatalogue)
                 return $"'{product.Name}' is already in the catalogue.";
 
-            // Add to catalogue
             product.IsInCatalogue = true;
             _context.SaveChanges();
             return $"'{product.Name}' has been added to the catalogue.";
         }
 
-        // Mark a product as unavailable in the catalogue
+        // Removes a product from the catalogue, hiding it from customers.
         public string RemoveProduct(int productId)
         {
-            // Find product in database
             var product = _context.Products.FirstOrDefault(p => p.Id == productId);
             if (product == null)
                 return "Product not found.";
 
-            // Check if currently in catalogue
             if (!product.IsInCatalogue)
                 return $"'{product.Name}' is not currently in the catalogue.";
 
-            // Remove from catalogue
             product.IsInCatalogue = false;
             _context.SaveChanges();
             return $"'{product.Name}' has been removed from the catalogue.";

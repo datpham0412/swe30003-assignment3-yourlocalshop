@@ -12,24 +12,22 @@ namespace Assignment_3_SWE30003.Controllers
         {
         }
 
-        // Generate a sales report for a specific time period (admin only)
+        // Generates a sales report for a specified time period with total orders and revenue (admin only).
         [HttpGet("generate")]
         public async Task<IActionResult> GenerateSalesReport([FromQuery] ReportPeriod period)
         {
             try
             {
-                // Verify that the user is an admin using BaseController
                 var (admin, error) = await ValidateAdminAsync();
                 if (error != null) return error;
 
-                // Get all paid/delivered orders within the specified time period
+                // Get orders within the specified period
                 var orders = await GetOrdersInPeriod(period) ?? new List<Order>();
 
-                // Create and populate the report with calculations
+                // Create and save report
                 var report = new SalesReport();
                 report.Generate(orders, period);
 
-                // Save the report to the database
                 _context.SalesReports.Add(report);
                 await _context.SaveChangesAsync();
 
@@ -41,11 +39,12 @@ namespace Assignment_3_SWE30003.Controllers
             }
         }
 
-        // Fetch orders that are paid or delivered within the specified time period
+        // Retrieves paid or delivered orders within the specified time period for report generation.
         private async Task<List<Order>> GetOrdersInPeriod(ReportPeriod period)
         {
             var now = DateTime.UtcNow;
-            // Calculate the start date based on the report period
+
+            // Calculate start date based on period type
             DateTime startDate = period switch
             {
                 ReportPeriod.Daily => now.Date,
@@ -54,7 +53,7 @@ namespace Assignment_3_SWE30003.Controllers
                 _ => now.AddDays(-7)
             };
 
-            // Only include paid or delivered orders within the date range
+            // Filter orders by status and date range
             var orders = await _context.Orders
                 .Where(o => (o.Status == OrderStatus.Paid || o.Status == OrderStatus.Delivered)
                             && o.OrderDate >= startDate

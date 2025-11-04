@@ -1,147 +1,172 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 // role select removed; no select components needed here
-import { Spinner } from "@/components/ui/spinner"
+import { Spinner } from "@/components/ui/spinner";
 
+// Authentication page with tabs for sign-in and sign-up, redirecting users based on their role.
 export default function AuthPage() {
-  const router = useRouter()
-  const [signInData, setSignInData] = useState({ email: "", password: "" })
-  const [signUpData, setSignUpData] = useState({ name: "", email: "", password: "", confirmPassword: "", phone: "" })
-  const [signInLoading, setSignInLoading] = useState(false)
-  const [signUpLoading, setSignUpLoading] = useState(false)
-  const [signInMessage, setSignInMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
-  const [signUpMessage, setSignUpMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
+  const router = useRouter();
+  const [signInData, setSignInData] = useState({ email: "", password: "" });
+  const [signUpData, setSignUpData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    phone: "",
+  });
+  const [signInLoading, setSignInLoading] = useState(false);
+  const [signUpLoading, setSignUpLoading] = useState(false);
+  const [signInMessage, setSignInMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
+  const [signUpMessage, setSignUpMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
 
+  // Authenticates user credentials and redirects to appropriate dashboard based on role.
   const handleSignIn = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setSignInLoading(true)
-    setSignInMessage(null)
+    e.preventDefault();
+    setSignInLoading(true);
+    setSignInMessage(null);
 
     try {
       const response = await fetch(
-        `http://localhost:5074/api/Auth/login?email=${encodeURIComponent(signInData.email)}&password=${encodeURIComponent(signInData.password)}`,
-        { method: "POST" },
-      )
+        `http://localhost:5074/api/Auth/login?email=${encodeURIComponent(
+          signInData.email
+        )}&password=${encodeURIComponent(signInData.password)}`,
+        { method: "POST" }
+      );
 
       if (response.ok) {
-        const data = await response.json()
-        const role = data.role || "Customer"
+        const data = await response.json();
+        const role = data.role || "Customer";
 
-        localStorage.setItem("email", signInData.email)
-        localStorage.setItem("password", signInData.password)
-        localStorage.setItem("role", role)
+        localStorage.setItem("email", signInData.email);
+        localStorage.setItem("password", signInData.password);
+        localStorage.setItem("role", role);
 
-        setSignInMessage({ type: "success", text: "Successfully signed in!" })
+        setSignInMessage({ type: "success", text: "Successfully signed in!" });
 
         setTimeout(() => {
           if (role === "Admin") {
-            router.push("/dashboard/admin")
+            router.push("/dashboard/admin");
           } else {
-            router.push("/catalogue")
+            router.push("/catalogue");
           }
-        }, 500)
+        }, 500);
       } else {
         // Prefer JSON { message } error, fall back to plain text
-        let errorText = "Sign in failed. Please try again."
+        let errorText = "Sign in failed. Please try again.";
         try {
-          const errJson = await response.json()
-          errorText = errJson?.message ?? errorText
+          const errJson = await response.json();
+          errorText = errJson?.message ?? errorText;
         } catch {
-          const txt = await response.text()
-          if (txt) errorText = txt
+          const txt = await response.text();
+          if (txt) errorText = txt;
         }
-        setSignInMessage({ type: "error", text: errorText })
+        setSignInMessage({ type: "error", text: errorText });
       }
     } catch (error) {
-      setSignInMessage({ type: "error", text: "Network error. Please check your connection." })
+      setSignInMessage({ type: "error", text: "Network error. Please check your connection." });
     } finally {
-      setSignInLoading(false)
+      setSignInLoading(false);
     }
-  }
+  };
 
+  // Registers a new customer account with validation for password matching and Australian phone format.
   const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setSignUpLoading(true)
-    setSignUpMessage(null)
+    e.preventDefault();
+    setSignUpLoading(true);
+    setSignUpMessage(null);
 
     if (!signUpData.name || signUpData.name.trim() === "") {
-      setSignUpMessage({ type: "error", text: "Name is required." })
-      setSignUpLoading(false)
-      return
+      setSignUpMessage({ type: "error", text: "Name is required." });
+      setSignUpLoading(false);
+      return;
     }
 
     if (signUpData.password !== signUpData.confirmPassword) {
-      setSignUpMessage({ type: "error", text: "Passwords do not match." })
-      setSignUpLoading(false)
-      return
+      setSignUpMessage({ type: "error", text: "Passwords do not match." });
+      setSignUpLoading(false);
+      return;
     }
 
-    // Basic Australian phone sanitization/normalization
+    // Normalizes Australian phone numbers to international format (+61XXXXXXXXX).
     const sanitizeAusPhone = (input: string) => {
-      if (!input) return ""
+      if (!input) return "";
       // Remove non-digit characters
-      let digits = input.replace(/\D/g, "")
+      let digits = input.replace(/\D/g, "");
       // If it starts with 61 (country code) after stripping, normalize to +61
-      if (digits.startsWith("61")) return "+" + digits
+      if (digits.startsWith("61")) return "+" + digits;
       // If it starts with 0 (local), replace leading 0 with +61
-      if (digits.startsWith("0")) return "+61" + digits.slice(1)
+      if (digits.startsWith("0")) return "+61" + digits.slice(1);
       // Otherwise, fallback to digits (caller should ensure correctness)
-      return digits
-    }
+      return digits;
+    };
 
-    const phoneNormalized = sanitizeAusPhone(signUpData.phone)
+    const phoneNormalized = sanitizeAusPhone(signUpData.phone);
     if (!phoneNormalized) {
-      setSignUpMessage({ type: "error", text: "Phone number is required." })
-      setSignUpLoading(false)
-      return
+      setSignUpMessage({ type: "error", text: "Phone number is required." });
+      setSignUpLoading(false);
+      return;
     }
 
     try {
       const response = await fetch(`http://localhost:5074/api/Auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name: signUpData.name, email: signUpData.email, password: signUpData.password, phone: phoneNormalized }),
-      })
+        body: JSON.stringify({
+          name: signUpData.name,
+          email: signUpData.email,
+          password: signUpData.password,
+          phone: phoneNormalized,
+        }),
+      });
 
       if (response.ok) {
         // Expect JSON with { message, role }
         try {
-          const data = await response.json()
-          const msg = data?.message ?? "Account created successfully!"
-          setSignUpMessage({ type: "success", text: msg })
+          const data = await response.json();
+          const msg = data?.message ?? "Account created successfully!";
+          setSignUpMessage({ type: "success", text: msg });
         } catch (e) {
           // Fallback to text if server returned plain text unexpectedly
-          const serverText = await response.text()
-          setSignUpMessage({ type: "success", text: serverText || "Account created successfully!" })
+          const serverText = await response.text();
+          setSignUpMessage({
+            type: "success",
+            text: serverText || "Account created successfully!",
+          });
         }
-        setSignUpData({ name: "", email: "", password: "", confirmPassword: "", phone: "" })
+        setSignUpData({ name: "", email: "", password: "", confirmPassword: "", phone: "" });
       } else {
         // Try to parse structured error first, fall back to text
-        let errorText = "Sign up failed. Please try again."
+        let errorText = "Sign up failed. Please try again.";
         try {
-          const errJson = await response.json()
-          errorText = errJson?.message ?? errorText
+          const errJson = await response.json();
+          errorText = errJson?.message ?? errorText;
         } catch {
-          const txt = await response.text()
-          if (txt) errorText = txt
+          const txt = await response.text();
+          if (txt) errorText = txt;
         }
-        setSignUpMessage({ type: "error", text: errorText })
+        setSignUpMessage({ type: "error", text: errorText });
       }
     } catch (error) {
-      setSignUpMessage({ type: "error", text: "Network error. Please check your connection." })
+      setSignUpMessage({ type: "error", text: "Network error. Please check your connection." });
     } finally {
-      setSignUpLoading(false)
+      setSignUpLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4">
@@ -156,7 +181,9 @@ export default function AuthPage() {
         <Card className="shadow-xl border-purple-100">
           <CardHeader>
             <CardTitle className="text-2xl text-center">Get Started</CardTitle>
-            <CardDescription className="text-center">Sign in to your account or create a new one</CardDescription>
+            <CardDescription className="text-center">
+              Sign in to your account or create a new one
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="signin" className="w-full">
@@ -193,7 +220,11 @@ export default function AuthPage() {
                   </div>
 
                   {signInMessage && (
-                    <p className={`text-sm ${signInMessage.type === "success" ? "text-green-600" : "text-red-600"}`}>
+                    <p
+                      className={`text-sm ${
+                        signInMessage.type === "success" ? "text-green-600" : "text-red-600"
+                      }`}
+                    >
                       {signInMessage.text}
                     </p>
                   )}
@@ -276,7 +307,9 @@ export default function AuthPage() {
                       type="password"
                       placeholder="••••••••"
                       value={signUpData.confirmPassword}
-                      onChange={(e) => setSignUpData({ ...signUpData, confirmPassword: e.target.value })}
+                      onChange={(e) =>
+                        setSignUpData({ ...signUpData, confirmPassword: e.target.value })
+                      }
                       required
                       className="rounded-lg"
                     />
@@ -284,7 +317,11 @@ export default function AuthPage() {
                   {/* role removed: users will default to Customer on backend */}
 
                   {signUpMessage && (
-                    <p className={`text-sm ${signUpMessage.type === "success" ? "text-green-600" : "text-red-600"}`}>
+                    <p
+                      className={`text-sm ${
+                        signUpMessage.type === "success" ? "text-green-600" : "text-red-600"
+                      }`}
+                    >
                       {signUpMessage.text}
                     </p>
                   )}
@@ -309,8 +346,10 @@ export default function AuthPage() {
           </CardContent>
         </Card>
 
-        <p className="text-center text-sm text-gray-500">© 2025 Your Local Shop. All rights reserved.</p>
+        <p className="text-center text-sm text-gray-500">
+          © 2025 Your Local Shop. All rights reserved.
+        </p>
       </div>
     </div>
-  )
+  );
 }

@@ -1,5 +1,6 @@
 namespace Assignment_3_SWE30003.Models
 {
+    // Represents an invoice for a payment with invoice number, amount, and issue date information.
     public class Invoice : EmailNotifier
     {
         public int Id { get; set; }
@@ -9,10 +10,9 @@ namespace Assignment_3_SWE30003.Models
         public DateTime IssueDate { get; set; } = DateTime.UtcNow;
         public Payment Payment { get; set; } = default!;
 
-        // Parameterless constructor for EF Core
         public Invoice() { }
 
-        // Constructor with payment details
+        // Creates an invoice linked to a specific payment record.
         public Invoice(Payment payment)
         {
             if (payment == null)
@@ -29,7 +29,7 @@ namespace Assignment_3_SWE30003.Models
             PaymentId = payment.Id;
         }
 
-        // Generates invoice content
+        // Generates invoice details including invoice number and notifies observers via email.
         public void Generate(string customerEmail)
         {
             if (Payment == null)
@@ -40,7 +40,7 @@ namespace Assignment_3_SWE30003.Models
             InvoiceNumber = $"INV-{Payment.OrderId}-{DateTime.UtcNow:yyyyMMddHHmmss}";
             Amount = Payment.Amount;
             IssueDate = DateTime.UtcNow;
-            
+
             // Notify observers about invoice generation
             NotifyObservers("InvoiceGenerated", new Dictionary<string, object>
             {

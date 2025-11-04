@@ -1,151 +1,163 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Spinner } from "@/components/ui/spinner"
-import { Minus, Plus, ShoppingCart, Trash2, ArrowLeft } from "lucide-react"
-import { toast } from "sonner"
-import { CustomerNav } from "@/components/customer/CustomerNav"
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
+import { Minus, Plus, ShoppingCart, Trash2, ArrowLeft } from "lucide-react";
+import { toast } from "sonner";
+import { CustomerNav } from "@/components/customer/CustomerNav";
 
+// Cart item data structure with product details and subtotal.
 interface CartItem {
-  cartItemId: number
-  productId: number
-  name: string
-  unitPrice: number
-  quantity: number
-  subtotal: number
+  cartItemId: number;
+  productId: number;
+  name: string;
+  unitPrice: number;
+  quantity: number;
+  subtotal: number;
 }
 
+// Shopping cart data structure with items and pricing totals.
 interface Cart {
-  cartId: number
-  items: CartItem[]
-  subtotal: number
-  tax: number
-  total: number
+  cartId: number;
+  items: CartItem[];
+  subtotal: number;
+  tax: number;
+  total: number;
 }
 
+// Shopping cart page allowing customers to view, update quantities, remove items, and proceed to checkout.
 export default function CartPage() {
-  const router = useRouter()
-  const [email, setEmail] = useState<string | null>(null)
-  const [password, setPassword] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [cart, setCart] = useState<Cart | null>(null)
-  const [updatingItems, setUpdatingItems] = useState<Set<number>>(new Set())
+  const router = useRouter();
+  const [email, setEmail] = useState<string | null>(null);
+  const [password, setPassword] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [cart, setCart] = useState<Cart | null>(null);
+  const [updatingItems, setUpdatingItems] = useState<Set<number>>(new Set());
 
+  // Checks authentication and loads cart data when component mounts.
   useEffect(() => {
-    const storedEmail = localStorage.getItem("email")
-    const storedPassword = localStorage.getItem("password")
-    const storedRole = localStorage.getItem("role")
+    const storedEmail = localStorage.getItem("email");
+    const storedPassword = localStorage.getItem("password");
+    const storedRole = localStorage.getItem("role");
 
     if (!storedEmail || !storedPassword || storedRole !== "Customer") {
-      router.push("/auth")
-      return
+      router.push("/auth");
+      return;
     }
 
-    setEmail(storedEmail)
-    setPassword(storedPassword)
-    fetchCart(storedEmail, storedPassword)
-  }, [router])
+    setEmail(storedEmail);
+    setPassword(storedPassword);
+    fetchCart(storedEmail, storedPassword);
+  }, [router]);
 
+  // Fetches the customer's shopping cart from the API.
   const fetchCart = async (userEmail: string, userPassword: string) => {
-    setLoading(true)
+    setLoading(true);
     try {
       const response = await fetch(
-        `http://localhost:5074/api/ShoppingCart/list?email=${encodeURIComponent(userEmail)}&password=${encodeURIComponent(userPassword)}`,
-      )
+        `http://localhost:5074/api/ShoppingCart/list?email=${encodeURIComponent(
+          userEmail
+        )}&password=${encodeURIComponent(userPassword)}`
+      );
 
       if (response.ok) {
-        const data = await response.json()
-        setCart(data)
+        const data = await response.json();
+        setCart(data);
       } else {
         toast.error("Failed to load cart", {
           description: "Please try again",
-        })
+        });
       }
     } catch (error) {
       toast.error("Network error", {
         description: "Please check your connection",
-      })
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
+  // Updates the quantity of a specific cart item, refreshing the cart totals.
   const updateQuantity = async (cartItemId: number, newQuantity: number) => {
-    if (newQuantity < 1) return
+    if (newQuantity < 1) return;
 
-    setUpdatingItems((prev) => new Set(prev).add(cartItemId))
+    setUpdatingItems((prev) => new Set(prev).add(cartItemId));
 
     try {
       const response = await fetch(
-        `http://localhost:5074/api/ShoppingCart/update?email=${encodeURIComponent(email!)}&password=${encodeURIComponent(password!)}`,
+        `http://localhost:5074/api/ShoppingCart/update?email=${encodeURIComponent(
+          email!
+        )}&password=${encodeURIComponent(password!)}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ cartItemId, quantity: newQuantity }),
-        },
-      )
+        }
+      );
 
       if (response.ok) {
-        const updatedCart = await response.json()
-        setCart(updatedCart)
-        toast.success("Cart updated")
+        const updatedCart = await response.json();
+        setCart(updatedCart);
+        toast.success("Cart updated");
       } else {
-        const errorText = await response.text()
+        const errorText = await response.text();
         toast.error("Failed to update cart", {
           description: errorText || "Please try again",
-        })
+        });
       }
     } catch (error) {
-      toast.error("Network error")
+      toast.error("Network error");
     } finally {
       setUpdatingItems((prev) => {
-        const newSet = new Set(prev)
-        newSet.delete(cartItemId)
-        return newSet
-      })
+        const newSet = new Set(prev);
+        newSet.delete(cartItemId);
+        return newSet;
+      });
     }
-  }
+  };
 
   const removeItem = async (cartItemId: number) => {
-    setUpdatingItems((prev) => new Set(prev).add(cartItemId))
+    setUpdatingItems((prev) => new Set(prev).add(cartItemId));
 
     try {
       const response = await fetch(
-        `http://localhost:5074/api/ShoppingCart/remove?email=${encodeURIComponent(email!)}&password=${encodeURIComponent(password!)}`,
+        `http://localhost:5074/api/ShoppingCart/remove?email=${encodeURIComponent(
+          email!
+        )}&password=${encodeURIComponent(password!)}`,
         {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ cartItemId }),
-        },
-      )
+        }
+      );
 
       if (response.ok) {
-        const updatedCart = await response.json()
-        setCart(updatedCart)
-        toast.success("Item removed from cart")
+        const updatedCart = await response.json();
+        setCart(updatedCart);
+        toast.success("Item removed from cart");
       } else {
-        toast.error("Failed to remove item")
+        toast.error("Failed to remove item");
       }
     } catch (error) {
-      toast.error("Network error")
+      toast.error("Network error");
     } finally {
       setUpdatingItems((prev) => {
-        const newSet = new Set(prev)
-        newSet.delete(cartItemId)
-        return newSet
-      })
+        const newSet = new Set(prev);
+        newSet.delete(cartItemId);
+        return newSet;
+      });
     }
-  }
+  };
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Spinner className="h-8 w-8 text-purple-600" />
       </div>
-    )
+    );
   }
 
   return (
@@ -190,12 +202,17 @@ export default function CartPage() {
             ) : (
               <div className="space-y-4">
                 {cart.items.map((item) => (
-                  <Card key={item.cartItemId} className="shadow-md hover:shadow-lg transition-shadow">
+                  <Card
+                    key={item.cartItemId}
+                    className="shadow-md hover:shadow-lg transition-shadow"
+                  >
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between gap-4">
                         <div className="flex-1">
                           <h3 className="font-semibold text-lg text-gray-900">{item.name}</h3>
-                          <p className="text-emerald-600 font-medium">${item.unitPrice.toFixed(2)}</p>
+                          <p className="text-emerald-600 font-medium">
+                            ${item.unitPrice.toFixed(2)}
+                          </p>
                         </div>
 
                         <div className="flex items-center gap-4">
@@ -282,5 +299,5 @@ export default function CartPage() {
         </div>
       </main>
     </div>
-  )
+  );
 }

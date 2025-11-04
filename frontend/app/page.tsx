@@ -1,8 +1,9 @@
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { ShoppingBag, Package, CreditCard, Truck, BarChart3 } from "lucide-react"
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ShoppingBag, Package, CreditCard, Truck, BarChart3 } from "lucide-react";
 
+// Landing page showcasing the shop's features and encouraging visitors to register or browse.
 export default function HomePage() {
   return (
     <div className="min-h-screen flex flex-col">
@@ -20,11 +21,17 @@ export default function HomePage() {
               <Link href="/" className="text-gray-700 hover:text-purple-600 transition-colors">
                 Home
               </Link>
-              <Link href="/catalogue" className="text-gray-700 hover:text-purple-600 transition-colors">
+              <Link
+                href="/catalogue"
+                className="text-gray-700 hover:text-purple-600 transition-colors"
+              >
                 Catalogue
               </Link>
               <Link href="/auth">
-                <Button variant="outline" className="border-purple-200 hover:bg-purple-50 bg-transparent">
+                <Button
+                  variant="outline"
+                  className="border-purple-200 hover:bg-purple-50 bg-transparent"
+                >
                   Login
                 </Button>
               </Link>
@@ -44,8 +51,8 @@ export default function HomePage() {
               </span>
             </h1>
             <p className="text-xl text-gray-600 leading-relaxed text-pretty">
-              Your Neighbourhood Store, Now Online! We offer both daily essentials and specialty items not found in
-              supermarkets.
+              Your Neighbourhood Store, Now Online! We offer both daily essentials and specialty
+              items not found in supermarkets.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
               <Link href="/auth">
@@ -69,11 +76,7 @@ export default function HomePage() {
           </div>
           <div className="flex justify-center">
             <div className="relative w-full max-w-md aspect-square">
-              <img
-                src="/storefront.png"
-                alt="Your Local Shop"
-                className="rounded-2xl shadow-2xl"
-              />
+              <img src="/storefront.png" alt="Your Local Shop" className="rounded-2xl shadow-2xl" />
             </div>
           </div>
         </div>
@@ -84,9 +87,10 @@ export default function HomePage() {
         <div className="max-w-4xl mx-auto text-center space-y-6">
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">About Your Local Shop</h2>
           <p className="text-lg text-gray-600 leading-relaxed text-pretty">
-            Your Local Shop is a Hawthorn convenience store bringing its unique range of daily essentials and specialty
-            products online. Browse, order, and have items delivered city-wide. We combine the warmth and personal touch
-            of your neighbourhood store with the convenience of modern e-commerce.
+            Your Local Shop is a Hawthorn convenience store bringing its unique range of daily
+            essentials and specialty products online. Browse, order, and have items delivered
+            city-wide. We combine the warmth and personal touch of your neighbourhood store with the
+            convenience of modern e-commerce.
           </p>
         </div>
       </section>
@@ -94,7 +98,9 @@ export default function HomePage() {
       {/* Features Section */}
       <section className="py-20 px-4 bg-gradient-to-br from-purple-50 to-emerald-50">
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl sm:text-4xl font-bold text-center text-gray-900 mb-12">What We Offer</h2>
+          <h2 className="text-3xl sm:text-4xl font-bold text-center text-gray-900 mb-12">
+            What We Offer
+          </h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             <Card className="border-purple-100 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1">
               <CardHeader>
@@ -103,7 +109,8 @@ export default function HomePage() {
                 </div>
                 <CardTitle>Browse Catalogue</CardTitle>
                 <CardDescription>
-                  Explore our wide range of daily essentials and specialty items not found in regular supermarkets.
+                  Explore our wide range of daily essentials and specialty items not found in
+                  regular supermarkets.
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -115,7 +122,8 @@ export default function HomePage() {
                 </div>
                 <CardTitle>Manage Shopping Cart</CardTitle>
                 <CardDescription>
-                  Add items to your cart, adjust quantities, and checkout with ease using our intuitive interface.
+                  Add items to your cart, adjust quantities, and checkout with ease using our
+                  intuitive interface.
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -127,7 +135,8 @@ export default function HomePage() {
                 </div>
                 <CardTitle>Secure Payments</CardTitle>
                 <CardDescription>
-                  Shop with confidence using our secure payment system that protects your financial information.
+                  Shop with confidence using our secure payment system that protects your financial
+                  information.
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -139,7 +148,8 @@ export default function HomePage() {
                 </div>
                 <CardTitle>Fast Delivery</CardTitle>
                 <CardDescription>
-                  Get your orders delivered quickly across the city with our reliable delivery service.
+                  Get your orders delivered quickly across the city with our reliable delivery
+                  service.
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -151,7 +161,8 @@ export default function HomePage() {
                 </div>
                 <CardTitle>Sales Reports</CardTitle>
                 <CardDescription>
-                  Admin users can access detailed sales analytics and reports to track business performance.
+                  Admin users can access detailed sales analytics and reports to track business
+                  performance.
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -163,7 +174,8 @@ export default function HomePage() {
                 </div>
                 <CardTitle>Local & Fresh</CardTitle>
                 <CardDescription>
-                  Support your local community while enjoying fresh products and personalized service.
+                  Support your local community while enjoying fresh products and personalized
+                  service.
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -178,5 +190,5 @@ export default function HomePage() {
         </div>
       </footer>
     </div>
-  )
+  );
 }
