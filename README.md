@@ -1,8 +1,34 @@
-# Introduction
+# Your Local Shop
+
+**Your Neighbourhood Store, Now Online!**
+
+A modern e-commerce platform that brings local shopping convenience to your fingertips. Browse daily essentials and specialty items, manage your cart, and get delivery - all from the comfort of your home.
+
+## Key Features
+
+- **Product Catalogue** - Browse and search products
+- **Shopping Cart** - Smart cart management with inventory checking
+- **Order Management** - Track orders from creation to delivery
+- **Payments** - Safe payment processing with invoice generation
+- **Shipment Tracking** - Updates on delivery status
+- **Account Management** - Personal profile with order history
+- **Admin Dashboard** - Comprehensive management tools for products, inventory, orders, and sales reports
+- **Role-Based Access** - Separate interfaces for customers and administrators
+
+## Tech Stack
+
+- **Frontend**: Next.js (React), TypeScript, Tailwind CSS, shadcn/ui
+- **Backend**: ASP.NET Core, Entity Framework Core
+- **Database**: SQLite
 
 # Development
 
 Guide for developers of the system
+
+## Prerequisites
+
+- Node.js 20.x or later
+- .NET 9 SDK
 
 ## Frontend (Next.js)
 
@@ -25,6 +51,8 @@ npm install
 ```
 npm run dev
 ```
+
+The frontend will be available at `http://localhost:3000`
 
 ### Other commands
 
@@ -78,4 +106,26 @@ Add new migration
 
 ```
 dotnet ef migrations add <MigrationName>
+```
+
+## Default Credentials
+
+The system creates a default admin account for development environment on first run:
+
+- **Email**: admin@gmail.com
+- **Password**: 123456789
+
+## Project Structure
+
+```
+├── frontend/                # Next.js frontend application
+│   ├── app/                 # Next.js app router pages
+│   ├── components/          # Reusable React components
+│   └── lib/                 # Utility functions
+├── Controllers/             # ASP.NET Core API controllers
+├── Models/                  # Domain models and business logic
+├── Data/                    # Database context and configuration
+├── Managers/                # Business logic managers
+├── DTOs/                    # Data transfer objects
+└── Migrations/              # Entity Framework migrations
 ```
