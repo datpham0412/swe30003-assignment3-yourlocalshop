@@ -27,7 +27,7 @@ Guide for developers of the system
 
 ## Prerequisites
 
-- Node.js
+- Node.js 20.x or later
 - .NET 9 SDK
 
 ## Frontend (Next.js)
